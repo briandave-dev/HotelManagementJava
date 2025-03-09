@@ -39,6 +39,10 @@ public class Client {
         return lastName;
     }
 
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
@@ -65,6 +69,10 @@ public class Client {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getName() {
+        return firstName + " " + lastName;
     }
 
     public List<Reservation> getReservationHistory() {

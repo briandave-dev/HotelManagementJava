@@ -8,8 +8,8 @@ public class Reservation {
     private final String id;
     private final Client client;
     private final Room room;
-    private final LocalDate checkInDate;
-    private final LocalDate checkOutDate;
+    private LocalDate checkInDate;
+    private LocalDate checkOutDate;
     private final double totalPrice;
     private boolean isCancelled;
 
@@ -64,6 +64,14 @@ public class Reservation {
             this.isCancelled = true;
             room.setOccupied(false);
         }
+    }
+
+    public void setCheckInDate(LocalDate checkInDate) {
+        this.checkInDate = checkInDate;
+    }
+
+    public void setCheckOutDate(LocalDate checkOutDate) {
+        this.checkOutDate = checkOutDate;
     }
 
     @Override

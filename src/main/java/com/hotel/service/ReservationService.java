@@ -75,4 +75,39 @@ public class ReservationService {
                 ))
                 .collect(Collectors.toList());
     }
+
+    public boolean isRoomAvailable(String roomNumber, LocalDate checkInDate, LocalDate checkOutDate) {
+        return isRoomAvailable(roomNumber, checkInDate, checkOutDate, null);
+    }
+
+    public boolean isRoomAvailable(String roomNumber, LocalDate checkInDate, LocalDate checkOutDate, String excludeReservationId) {
+        return reservations.stream()
+                .filter(reservation -> !reservation.isCancelled())
+                .filter(reservation -> excludeReservationId == null || !reservation.getId().equals(excludeReservationId))
+                .filter(reservation -> reservation.getRoom().getNumber().equals(roomNumber))
+                .noneMatch(reservation -> (
+                    checkInDate.isBefore(reservation.getCheckOutDate()) &&
+                    checkOutDate.isAfter(reservation.getCheckInDate())
+                ));
+    }
+
+    public void updateReservationDates(String reservationId, LocalDate newCheckInDate, LocalDate newCheckOutDate) {
+        Reservation reservation = findReservationById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("Reservation not found"));
+
+        if (reservation.isCancelled()) {
+            throw new IllegalStateException("Cannot update cancelled reservation");
+        }
+
+        if (newCheckInDate.isAfter(newCheckOutDate)) {
+            throw new IllegalArgumentException("Check-in date must be before check-out date");
+        }
+
+        if (newCheckInDate.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Check-in date cannot be in the past");
+        }
+
+        reservation.setCheckInDate(newCheckInDate);
+        reservation.setCheckOutDate(newCheckOutDate);
+    }
 }

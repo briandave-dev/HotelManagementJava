@@ -73,7 +73,7 @@ public class MainFrame extends JFrame {
         // Create panels for different sections
         mainPanel.add(new ClientPanel(clientService), "clients");
         mainPanel.add(new RoomPanel(roomService), "rooms");
-        mainPanel.add(new ReservationPanel(reservationService), "reservations");
+        mainPanel.add(new ReservationPanel(reservationService, invoiceService), "reservations");
         mainPanel.add(new InvoicePanel(invoiceService), "invoices");
 
         // Add welcome panel

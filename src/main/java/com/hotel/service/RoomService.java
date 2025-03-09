@@ -2,7 +2,9 @@ package com.hotel.service;
 
 import com.hotel.model.Room;
 import com.hotel.model.RoomCategory;
+import com.hotel.model.Reservation;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -10,9 +12,11 @@ import java.util.stream.Collectors;
 
 public class RoomService {
     private final List<Room> rooms;
+    private final List<Reservation> reservations;
 
     public RoomService() {
         this.rooms = new ArrayList<>();
+        this.reservations = new ArrayList<>();
     }
 
     public void addRoom(String number, RoomCategory category, double ratePerNight, String amenities) {
@@ -39,10 +43,20 @@ public class RoomService {
         return new ArrayList<>(rooms);
     }
 
-    public List<Room> getAvailableRooms() {
+    public List<Room> getAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate) {
         return rooms.stream()
-                .filter(room -> !room.isOccupied())
+                .filter(room -> isRoomAvailable(room, checkInDate, checkOutDate))
                 .collect(Collectors.toList());
+    }
+
+    public boolean isRoomAvailable(Room room, LocalDate checkInDate, LocalDate checkOutDate) {
+        return reservations.stream()
+                .filter(reservation -> reservation.getRoom().equals(room))
+                .filter(reservation -> !reservation.isCancelled())
+                .noneMatch(reservation -> (
+                    checkInDate.isBefore(reservation.getCheckOutDate()) &&
+                    checkOutDate.isAfter(reservation.getCheckInDate())
+                ));
     }
 
     public List<Room> getRoomsByCategory(RoomCategory category) {
@@ -55,5 +69,9 @@ public class RoomService {
         return rooms.stream()
                 .filter(room -> room.getNumber().equals(number))
                 .findFirst();
+    }
+
+    public void addReservation(Reservation reservation) {
+        reservations.add(reservation);
     }
 }

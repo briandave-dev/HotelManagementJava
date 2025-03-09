@@ -48,6 +48,19 @@ public class InvoiceService {
                 .findFirst();
     }
 
+    public void updateInvoice(Invoice invoice) {
+        int index = -1;
+        for (int i = 0; i < invoices.size(); i++) {
+            if (invoices.get(i).getId().equals(invoice.getId())) {
+                index = i;
+                break;
+            }
+        }
+        if (index != -1) {
+            invoices.set(index, invoice);
+        }
+    }
+
     public List<Invoice> getInvoicesForReservation(String reservationId) {
         return invoices.stream()
                 .filter(invoice -> invoice.getReservation().getId().equals(reservationId))

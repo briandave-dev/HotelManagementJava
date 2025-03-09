@@ -7,6 +7,7 @@ import com.hotel.service.RoomService;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.util.List;
 
 public class RoomPanel extends JPanel {
@@ -30,11 +31,11 @@ public class RoomPanel extends JPanel {
         this.amenitiesField = new JTextField(20);
 
         // Create table model and table
-        String[] columnNames = {"Number", "Category", "Rate/Night", "Amenities", "Status"};
+        String[] columnNames = {"Number", "Category", "Rate/Night", "Amenities", "Status", "Actions"};
         this.tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false;
+                return column == getColumnCount() - 1;
             }
 
             @Override
@@ -44,6 +45,69 @@ public class RoomPanel extends JPanel {
             }
         };
         this.roomTable = new JTable(tableModel);
+
+        // Set table header appearance
+        roomTable.getTableHeader().setBackground(new Color(51, 122, 183));
+        roomTable.getTableHeader().setForeground(Color.WHITE);
+        roomTable.getTableHeader().setFont(roomTable.getTableHeader().getFont().deriveFont(Font.BOLD));
+        
+        // Set row height to better accommodate buttons
+        roomTable.setRowHeight(30);
+
+        // Configure the Actions column with proper button handling
+        // Add button editor for handling button clicks
+        roomTable.getColumn("Actions").setCellEditor(new ButtonEditor(roomTable));
+
+        roomTable.getColumn("Actions").setCellRenderer((table, value, isSelected, hasFocus, row, column) -> {
+            JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+            panel.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
+            
+            if (value instanceof JPanel) {
+                return (JPanel) value;
+            }
+            
+            String roomNumber = (String) tableModel.getValueAt(row, 0);
+            JButton editBtn = createButton("Edit");
+            JButton copyBtn = createButton("Copy ID");
+            JButton deleteBtn = createButton("Delete");
+            deleteBtn.setBackground(new Color(220, 53, 69)); // Red color for delete button
+            
+            // Set fixed size for buttons
+            Dimension buttonSize = new Dimension(60, 25);
+            editBtn.setPreferredSize(buttonSize);
+            copyBtn.setPreferredSize(buttonSize);
+            deleteBtn.setPreferredSize(buttonSize);
+            
+            editBtn.addActionListener(e -> {
+                selectedRoomNumber = roomNumber;
+                Room room = roomService.findRoomByNumber(roomNumber).orElse(null);
+                if (room != null) {
+                    roomNumberField.setText(room.getNumber());
+                    categoryComboBox.setSelectedItem(room.getCategory());
+                    rateField.setText(String.valueOf(room.getRatePerNight()));
+                    amenitiesField.setText(room.getAmenities());
+                }
+            });
+            copyBtn.addActionListener(e -> {
+                StringSelection selection = new StringSelection(roomNumber);
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
+                JOptionPane.showMessageDialog(this, "Room number copied to clipboard!", "Copy Success", JOptionPane.INFORMATION_MESSAGE);
+            });
+            deleteBtn.addActionListener(e -> {
+                selectedRoomNumber = roomNumber;
+                deleteRoom();
+            });
+            
+            panel.add(editBtn);
+            panel.add(copyBtn);
+            panel.add(deleteBtn);
+            
+            return panel;
+        });
+
+        // Set preferred column widths
+        roomTable.getColumnModel().getColumn(0).setPreferredWidth(50);  // Number
+        roomTable.getColumnModel().getColumn(5).setPreferredWidth(150); // Actions
         roomTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && roomTable.getSelectedRow() != -1) {
                 selectedRoomNumber = (String) roomTable.getValueAt(roomTable.getSelectedRow(), 0);
@@ -83,18 +147,12 @@ public class RoomPanel extends JPanel {
         // Add buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton addButton = new JButton("Add Room");
-        JButton updateButton = new JButton("Update Room");
-        JButton deleteButton = new JButton("Delete Room");
         JButton clearButton = new JButton("Clear Form");
 
         addButton.addActionListener(e -> addRoom());
-        updateButton.addActionListener(e -> updateRoom());
-        deleteButton.addActionListener(e -> deleteRoom());
         clearButton.addActionListener(e -> clearForm());
 
         buttonPanel.add(addButton);
-        buttonPanel.add(updateButton);
-        buttonPanel.add(deleteButton);
         buttonPanel.add(clearButton);
 
         gbc.gridx = 0;
@@ -195,6 +253,95 @@ public class RoomPanel extends JPanel {
         }
     }
 
+    class ButtonEditor extends DefaultCellEditor {
+        private JPanel panel;
+        private String roomNumber;
+        private int row;
+        private JTable table;
+
+        public ButtonEditor(JTable table) {
+            super(new JTextField());
+            this.table = table;
+            this.panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+            
+            // Important: Set click count to 1 so it activates on first click
+            setClickCountToStart(1);
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            this.row = row;
+            this.roomNumber = (String) table.getModel().getValueAt(row, 0);
+            
+            // Clear panel and recreate buttons
+            panel.removeAll();
+            panel.setBackground(table.getSelectionBackground());
+            
+            // Create buttons with the same styling as in your renderer
+            JButton editBtn = createButton("Edit");
+            JButton copyBtn = createButton("Copy ID");
+            JButton deleteBtn = createButton("Delete");
+            deleteBtn.setBackground(new Color(220, 53, 69)); // Red color for delete button
+            
+            // Set fixed size for buttons
+            Dimension buttonSize = new Dimension(60, 25);
+            editBtn.setPreferredSize(buttonSize);
+            copyBtn.setPreferredSize(buttonSize);
+            deleteBtn.setPreferredSize(buttonSize);
+            
+            // Add action listeners that call your existing methods
+            RoomPanel roomPanel = (RoomPanel) SwingUtilities.getAncestorOfClass(RoomPanel.class, table);
+            if (roomPanel != null) {
+                editBtn.addActionListener(e -> {
+                    stopCellEditing();
+                    roomPanel.selectedRoomNumber = roomNumber;
+                    Room room = roomPanel.roomService.findRoomByNumber(roomNumber).orElse(null);
+                    if (room != null) {
+                        roomPanel.roomNumberField.setText(room.getNumber());
+                        roomPanel.categoryComboBox.setSelectedItem(room.getCategory());
+                        roomPanel.rateField.setText(String.valueOf(room.getRatePerNight()));
+                        roomPanel.amenitiesField.setText(room.getAmenities());
+                    }
+                });
+                copyBtn.addActionListener(e -> {
+                    stopCellEditing();
+                    StringSelection selection = new StringSelection(roomNumber);
+                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
+                    JOptionPane.showMessageDialog(roomPanel, "Room number copied to clipboard!", "Copy Success", JOptionPane.INFORMATION_MESSAGE);
+                });
+                deleteBtn.addActionListener(e -> {
+                    stopCellEditing();
+                    roomPanel.selectedRoomNumber = roomNumber;
+                    roomPanel.deleteRoom();
+                });
+            }
+            
+            panel.add(editBtn);
+            panel.add(copyBtn);
+            panel.add(deleteBtn);
+            
+            return panel;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            return panel;
+        }
+    }
+
+    private JButton createButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(button.getFont().deriveFont(11f));
+        button.setMargin(new Insets(1, 3, 1, 3));
+        button.setFocusPainted(false);
+        button.setBackground(new Color(51, 122, 183));
+        button.setForeground(Color.WHITE);
+        button.setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 6));
+        return button;
+    }
+
+
+
     private void clearForm() {
         roomNumberField.setText("");
         categoryComboBox.setSelectedIndex(0);
@@ -213,7 +360,8 @@ public class RoomPanel extends JPanel {
                 room.getCategory(),
                 room.getRatePerNight(),
                 room.getAmenities(),
-                room.isOccupied() ? "Occupied" : "Available"
+                room.isOccupied() ? "Occupied" : "Available",
+                new JPanel() // Placeholder for actions column
             };
             tableModel.addRow(row);
         }
