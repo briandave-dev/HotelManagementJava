@@ -1,0 +1,66 @@
+jai besoin que tu realises ce projet en respectant les principes SOLID de programmatinon
+
+PROJET : APPLICATION DE GESTION DES RESERVATIONS D’UN
+HOTEL
+Description détaillée du projet
+Vous devez développer une application de gestion des réservations d’un hôtel
+permettant aux administrateurs de gérer les clients, les chambres, et les réservations. Le
+système permettra également de calculer les factures en fonction de la durée du séjour et du
+type de chambre.
+L’application aura fonctionnalités suivantes :
+1. Gestion des clients : Les utilisateurs doivent pouvoir ajouter, supprimer, modifier
+et consulter les informations des clients. Les informations de chaque client incluent :
+ Nom
+ Prénom
+ Adresse
+ Numéro de téléphone
+ Email
+ Historique des réservations2
+Chaque client aura un identifiant unique pour le retrouver facilement.
+2. Gestion des chambres : Il doit être possible de gérer les chambres de l'hôtel, y compris
+:
+ Ajouter de nouvelles chambres avec un numéro unique, une catégorie (simple,
+double, suite) et des tarifs associés.
+ Mettre à jour les informations d’une chambre (ex : changement de tarif ou de
+catégorie).
+ Supprimer une chambre.
+ Consulter la liste des chambres disponibles ou réservées.
+Les chambres peuvent être catégorisées selon des critères (type de chambre, capacité,
+équipements). Le système doit permettre de savoir quelles chambres sont libres ou
+occupées à tout moment.
+3. Gestion des réservations : Cette fonctionnalité doit permettre de réaliser des
+réservations et de les annuler. Chaque réservation inclura :
+ Un client associé
+ Une chambre spécifique
+ Une date d’arrivée et une date de départ
+ Le prix total du séjour (calculé en fonction de la durée du séjour et du tarif de
+la chambre)
+Les réservations peuvent être listées par client ou par date. Il doit également être
+possible d’afficher toutes les réservations en cours.
+4. Calcul des factures : À chaque réservation, une facture doit être générée en fonction
+de :
+ La durée du séjour (nombre de nuits)
+ Le prix de la chambre par nuit
+ Eventuellement des taxes ou des frais supplémentaires (petit-déjeuner,
+services divers, etc.)
+La facture sera générée automatiquement et pourra être consultée, modifiée ou
+annulée. Un PDF de la facture peut être généré à l'aide d'une bibliothèque comme iText
+pour permettre l'impression.3
+Présentation de l’Interface Utilisateur (GUI)
+L'application doit avoir une interface graphique (en utilisant Swing) permettant aux
+utilisateurs d'interagir avec le système. Voici des éléments de l’interface à inclure :
+1. Fenêtre d'accueil :
+ Menu permettant d’accéder aux différentes sections : Gestion des clients, gestion
+des chambres, gestion des réservations, rapports, etc.
+2. Fenêtre de gestion des clients :
+ Formulaire pour ajouter, modifier ou supprimer un client.
+ Liste des clients avec des options pour afficher ou supprimer.
+3. Fenêtre de gestion des chambres :
+ Liste des chambres avec leurs informations (numéro, type, disponibilité, tarif).
+ Formulaire pour ajouter ou modifier des chambres.
+4. Fenêtre de gestion des réservations :
+ Liste des réservations avec options de tri (par client, par date, par chambre).
+ Formulaire pour effectuer ou annuler une réservation.
+5. Fenêtre de facturation :
+ Affichage des factures générées avec possibilité de télécharger ou imprimer la
+facture en PDF.
