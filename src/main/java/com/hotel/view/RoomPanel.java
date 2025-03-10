@@ -54,60 +54,13 @@ public class RoomPanel extends JPanel {
         // Set row height to better accommodate buttons
         roomTable.setRowHeight(30);
 
-        // Configure the Actions column with proper button handling
-        // Add button editor for handling button clicks
-        roomTable.getColumn("Actions").setCellEditor(new ButtonEditor(roomTable));
-
-        roomTable.getColumn("Actions").setCellRenderer((table, value, isSelected, hasFocus, row, column) -> {
-            JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
-            panel.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
-            
-            if (value instanceof JPanel) {
-                return (JPanel) value;
-            }
-            
-            String roomNumber = (String) tableModel.getValueAt(row, 0);
-            JButton editBtn = createButton("Edit");
-            JButton copyBtn = createButton("Copy ID");
-            JButton deleteBtn = createButton("Delete");
-            deleteBtn.setBackground(new Color(220, 53, 69)); // Red color for delete button
-            
-            // Set fixed size for buttons
-            Dimension buttonSize = new Dimension(60, 25);
-            editBtn.setPreferredSize(buttonSize);
-            copyBtn.setPreferredSize(buttonSize);
-            deleteBtn.setPreferredSize(buttonSize);
-            
-            editBtn.addActionListener(e -> {
-                selectedRoomNumber = roomNumber;
-                Room room = roomService.findRoomByNumber(roomNumber).orElse(null);
-                if (room != null) {
-                    roomNumberField.setText(room.getNumber());
-                    categoryComboBox.setSelectedItem(room.getCategory());
-                    rateField.setText(String.valueOf(room.getRatePerNight()));
-                    amenitiesField.setText(room.getAmenities());
-                }
-            });
-            copyBtn.addActionListener(e -> {
-                StringSelection selection = new StringSelection(roomNumber);
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
-                JOptionPane.showMessageDialog(this, "Room number copied to clipboard!", "Copy Success", JOptionPane.INFORMATION_MESSAGE);
-            });
-            deleteBtn.addActionListener(e -> {
-                selectedRoomNumber = roomNumber;
-                deleteRoom();
-            });
-            
-            panel.add(editBtn);
-            panel.add(copyBtn);
-            panel.add(deleteBtn);
-            
-            return panel;
-        });
+        // Fixed: Configure the Actions column with proper button renderer
+        roomTable.getColumn("Actions").setCellRenderer(new ButtonRenderer());
+        roomTable.getColumn("Actions").setCellEditor(new ButtonEditor(new JTextField()));
 
         // Set preferred column widths
         roomTable.getColumnModel().getColumn(0).setPreferredWidth(50);  // Number
-        roomTable.getColumnModel().getColumn(5).setPreferredWidth(150); // Actions
+        roomTable.getColumnModel().getColumn(5).setPreferredWidth(180); // Actions
         roomTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && roomTable.getSelectedRow() != -1) {
                 selectedRoomNumber = (String) roomTable.getValueAt(roomTable.getSelectedRow(), 0);
@@ -123,7 +76,11 @@ public class RoomPanel extends JPanel {
 
         // Create and add form panel
         JPanel formPanel = createFormPanel();
-        add(formPanel, BorderLayout.NORTH);
+        
+        // Create a wrapper panel to center the form - FIXED
+        JPanel centeringPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        centeringPanel.add(formPanel);
+        add(centeringPanel, BorderLayout.NORTH);
 
         // Add table with scroll pane
         JScrollPane scrollPane = new JScrollPane(roomTable);
@@ -133,56 +90,154 @@ public class RoomPanel extends JPanel {
         refreshTable();
     }
 
+    // Fixed: Separate renderer for buttons to ensure they're always visible
+    class ButtonRenderer extends JPanel implements javax.swing.table.TableCellRenderer {
+        public ButtonRenderer() {
+            setLayout(new FlowLayout(FlowLayout.LEFT, 2, 0));
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            this.removeAll();
+            setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
+            
+            String roomNumber = (String) tableModel.getValueAt(row, 0);
+            
+            JButton editBtn = createButton("Edit");
+            JButton copyBtn = createButton("Copy ID");
+            JButton deleteBtn = createButton("Delete");
+            deleteBtn.setBackground(new Color(220, 53, 69)); // Red color for delete button
+            
+            // Set fixed size for buttons
+            Dimension buttonSize = new Dimension(60, 25);
+            editBtn.setPreferredSize(buttonSize);
+            copyBtn.setPreferredSize(buttonSize);
+            deleteBtn.setPreferredSize(buttonSize);
+            
+            this.add(editBtn);
+            this.add(copyBtn);
+            this.add(deleteBtn);
+            
+            return this;
+        }
+    }
+
+    // Fixed: Button editor implementation
+    class ButtonEditor extends DefaultCellEditor {
+        private String roomNumber;
+        private JPanel panel;
+
+        public ButtonEditor(JTextField textField) {
+            super(textField);
+            panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+            setClickCountToStart(1); // React on single click
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            panel.removeAll();
+            panel.setBackground(table.getSelectionBackground());
+            
+            roomNumber = (String) tableModel.getValueAt(row, 0);
+            
+            JButton editBtn = createButton("Edit");
+            JButton copyBtn = createButton("Copy ID");
+            JButton deleteBtn = createButton("Delete");
+            deleteBtn.setBackground(new Color(220, 53, 69)); // Red color for delete button
+            
+            // Set fixed size for buttons
+            Dimension buttonSize = new Dimension(60, 25);
+            editBtn.setPreferredSize(buttonSize);
+            copyBtn.setPreferredSize(buttonSize);
+            deleteBtn.setPreferredSize(buttonSize);
+            
+            editBtn.addActionListener(e -> {
+                fireEditingStopped();
+                showEditDialog(table.getSelectedRow());
+            });
+            
+            copyBtn.addActionListener(e -> {
+                fireEditingStopped();
+                copyRoomNumber(table.getSelectedRow());
+            });
+            
+            deleteBtn.addActionListener(e -> {
+                fireEditingStopped();
+                deleteRoom(table.getSelectedRow());
+            });
+            
+            panel.add(editBtn);
+            panel.add(copyBtn);
+            panel.add(deleteBtn);
+            
+            return panel;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            return "";
+        }
+    }
+
     private JPanel createFormPanel() {
-        JPanel formPanel = new JPanel(new GridBagLayout());
+        // Fixed: Using a more centered layout approach
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
+        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Create grid panel for form fields
+        JPanel gridPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 10, 5, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-
-        // Add form components with proper constraints
+        gbc.anchor = GridBagConstraints.WEST;
+        
+        // Room Number field
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.gridwidth = 1;
-        gbc.anchor = GridBagConstraints.EAST;
-        formPanel.add(new JLabel("Room Number:"), gbc);
-
+        JLabel roomNumberLabel = new JLabel("Room Number:", JLabel.RIGHT);
+        gridPanel.add(roomNumberLabel, gbc);
+        
         gbc.gridx = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-        formPanel.add(roomNumberField, gbc);
-
+        gridPanel.add(roomNumberField, gbc);
+        
+        // Category field
         gbc.gridx = 0;
         gbc.gridy = 1;
-        gbc.anchor = GridBagConstraints.EAST;
-        formPanel.add(new JLabel("Category:"), gbc);
-
+        JLabel categoryLabel = new JLabel("Category:", JLabel.RIGHT);
+        gridPanel.add(categoryLabel, gbc);
+        
         gbc.gridx = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-        formPanel.add(categoryComboBox, gbc);
-
+        gridPanel.add(categoryComboBox, gbc);
+        
+        // Rate field
         gbc.gridx = 0;
         gbc.gridy = 2;
-        gbc.anchor = GridBagConstraints.EAST;
-        formPanel.add(new JLabel("Rate per Night:"), gbc);
-
+        JLabel rateLabel = new JLabel("Rate per Night:", JLabel.RIGHT);
+        gridPanel.add(rateLabel, gbc);
+        
         gbc.gridx = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-        formPanel.add(rateField, gbc);
-
+        gridPanel.add(rateField, gbc);
+        
+        // Amenities field
         gbc.gridx = 0;
         gbc.gridy = 3;
-        gbc.anchor = GridBagConstraints.EAST;
-        formPanel.add(new JLabel("Amenities:"), gbc);
-
+        JLabel amenitiesLabel = new JLabel("Amenities:", JLabel.RIGHT);
+        gridPanel.add(amenitiesLabel, gbc);
+        
         gbc.gridx = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-        formPanel.add(amenitiesField, gbc);
-
-        // Add buttons with proper alignment
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        gridPanel.add(amenitiesField, gbc);
+        
+        // Center the grid panel
+        JPanel centeringGrid = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        centeringGrid.add(gridPanel);
+        formPanel.add(centeringGrid);
+        
+        // Button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         JButton addButton = new JButton("Add Room");
         JButton clearButton = new JButton("Clear Form");
-
+        
         // Style the buttons consistently
         addButton.setPreferredSize(new Dimension(100, 30));
         clearButton.setPreferredSize(new Dimension(100, 30));
@@ -192,23 +247,14 @@ public class RoomPanel extends JPanel {
         clearButton.setForeground(Color.WHITE);
         addButton.setFocusPainted(false);
         clearButton.setFocusPainted(false);
-
+        
         addButton.addActionListener(e -> addRoom());
         clearButton.addActionListener(e -> clearForm());
-
+        
         buttonPanel.add(addButton);
         buttonPanel.add(clearButton);
-
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.insets = new Insets(15, 10, 5, 10);
-        formPanel.add(buttonPanel, gbc);
-
-        // Add some padding around the form
-        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
+        formPanel.add(buttonPanel);
+        
         return formPanel;
     }
 
@@ -287,72 +333,6 @@ public class RoomPanel extends JPanel {
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Error deleting room: " + e.getMessage());
             }
-        }
-    }
-
-    class ButtonEditor extends DefaultCellEditor {
-        private JPanel panel;
-        private String roomNumber;
-        private int row;
-        private JTable table;
-
-        public ButtonEditor(JTable table) {
-            super(new JTextField());
-            this.table = table;
-            this.panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
-            
-            // Important: Set click count to 1 so it activates on first click
-            setClickCountToStart(1);
-        }
-
-        @Override
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            this.row = row;
-            this.roomNumber = (String) table.getModel().getValueAt(row, 0);
-            
-            // Clear panel and recreate buttons
-            panel.removeAll();
-            panel.setBackground(table.getSelectionBackground());
-            
-            // Create buttons with the same styling as in your renderer
-            JButton editBtn = createButton("Edit");
-            JButton copyBtn = createButton("Copy ID");
-            JButton deleteBtn = createButton("Delete");
-            deleteBtn.setBackground(new Color(220, 53, 69)); // Red color for delete button
-            
-            // Set fixed size for buttons
-            Dimension buttonSize = new Dimension(60, 25);
-            editBtn.setPreferredSize(buttonSize);
-            copyBtn.setPreferredSize(buttonSize);
-            deleteBtn.setPreferredSize(buttonSize);
-            
-            // Add action listeners that call your existing methods
-            RoomPanel roomPanel = (RoomPanel) SwingUtilities.getAncestorOfClass(RoomPanel.class, table);
-            if (roomPanel != null) {
-                editBtn.addActionListener(e -> {
-                    stopCellEditing();
-                    roomPanel.showEditDialog(row);
-                });
-                copyBtn.addActionListener(e -> {
-                    stopCellEditing();
-                    roomPanel.copyRoomNumber(row);
-                });
-                deleteBtn.addActionListener(e -> {
-                    stopCellEditing();
-                    roomPanel.deleteRoom(row);
-                });
-            }
-            
-            panel.add(editBtn);
-            panel.add(copyBtn);
-            panel.add(deleteBtn);
-            
-            return panel;
-        }
-
-        @Override
-        public Object getCellEditorValue() {
-            return panel;
         }
     }
 
@@ -467,8 +447,6 @@ public class RoomPanel extends JPanel {
         return button;
     }
 
-
-
     private void clearForm() {
         roomNumberField.setText("");
         categoryComboBox.setSelectedIndex(0);
@@ -488,7 +466,7 @@ public class RoomPanel extends JPanel {
                 room.getRatePerNight(),
                 room.getAmenities(),
                 room.isOccupied() ? "Occupied" : "Available",
-                new JPanel() // Placeholder for actions column
+                "" // Empty string for actions column (will be rendered by ButtonRenderer)
             };
             tableModel.addRow(row);
         }
