@@ -41,34 +41,29 @@ public class InvoicePanel extends JPanel {
         // Set row height to better accommodate buttons
         invoiceTable.setRowHeight(30);
         
+        // Configure the Actions column with proper button handling
         invoiceTable.getColumn("Actions").setCellRenderer((table, value, isSelected, hasFocus, row, column) -> {
             if (value instanceof JPanel) {
-                return (JPanel) value;
+                JPanel panel = (JPanel) value;
+                panel.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
+                return panel;
             }
             
             JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
             panel.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
             
-            JButton editBtn = createButton("Edit");
-            JButton copyBtn = createButton("Copy ID");
-            JButton viewBtn = createButton("View");
+            JButton generatePdfBtn = createButton("Generate PDF");
             
-            // Set fixed size for buttons
-            Dimension buttonSize = new Dimension(60, 25);
-            editBtn.setPreferredSize(buttonSize);
-            copyBtn.setPreferredSize(buttonSize);
-            viewBtn.setPreferredSize(buttonSize);
+            // Set fixed size for button
+            Dimension buttonSize = new Dimension(90, 25);
+            generatePdfBtn.setPreferredSize(buttonSize);
             
-            editBtn.addActionListener(e -> showEditDialog(row));
-            copyBtn.addActionListener(e -> copyInvoiceId(row));
-            viewBtn.addActionListener(e -> viewInvoiceDetails(row));
-            
-            panel.add(editBtn);
-            panel.add(copyBtn);
-            panel.add(viewBtn);
-            
+            panel.add(generatePdfBtn);
             return panel;
         });
+
+        // Add button editor for handling button clicks
+        invoiceTable.getColumn("Actions").setCellEditor(new ButtonEditor(invoiceTable));
 
         // Set preferred column widths
         invoiceTable.getColumnModel().getColumn(0).setPreferredWidth(80);  // Invoice ID
@@ -220,30 +215,64 @@ public class InvoicePanel extends JPanel {
         return button;
     }
 
+    class ButtonEditor extends DefaultCellEditor {
+        private JPanel panel;
+        private String invoiceId;
+        private JTable table;
+
+        public ButtonEditor(JTable table) {
+            super(new JTextField());
+            this.table = table;
+            this.panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+            
+            // Important: Set click count to 1 so it activates on first click
+            setClickCountToStart(1);
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            this.invoiceId = (String) table.getModel().getValueAt(row, 0);
+            
+            // Clear panel and recreate buttons
+            panel.removeAll();
+            panel.setBackground(table.getSelectionBackground());
+            
+            // Create generate PDF button with the same styling
+            JButton generatePdfBtn = createButton("Generate PDF");
+            
+            // Set fixed size for button
+            Dimension buttonSize = new Dimension(90, 25);
+            generatePdfBtn.setPreferredSize(buttonSize);
+            
+            // Add action listener that calls your existing method
+            InvoicePanel invoicePanel = (InvoicePanel) SwingUtilities.getAncestorOfClass(InvoicePanel.class, table);
+            if (invoicePanel != null) {
+                generatePdfBtn.addActionListener(e -> {
+                    stopCellEditing();
+                    invoicePanel.generatePdf();
+                });
+            }
+            
+            panel.add(generatePdfBtn);
+            return panel;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            return panel;
+        }
+    }
+
     private JPanel createActionPanel(String invoiceId) {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
-        JButton editBtn = createButton("Edit");
-        JButton copyBtn = createButton("Copy ID");
-        JButton viewBtn = createButton("View");
-
-        // Add action listeners to the buttons
-        editBtn.addActionListener(e -> {
-            int row = findRowByInvoiceId(invoiceId);
-            if (row >= 0) showEditDialog(row);
-        });
-        copyBtn.addActionListener(e -> {
-            int row = findRowByInvoiceId(invoiceId);
-            if (row >= 0) copyInvoiceId(row);
-        });
-        viewBtn.addActionListener(e -> {
-            int row = findRowByInvoiceId(invoiceId);
-            if (row >= 0) viewInvoiceDetails(row);
-        });
-
-        panel.add(editBtn);
-        panel.add(copyBtn);
-        panel.add(viewBtn);
-
+        
+        JButton generatePdfBtn = createButton("Generate PDF");
+        
+        // Set fixed size for button
+        Dimension buttonSize = new Dimension(90, 25);
+        generatePdfBtn.setPreferredSize(buttonSize);
+        
+        panel.add(generatePdfBtn);
         return panel;
     }
 

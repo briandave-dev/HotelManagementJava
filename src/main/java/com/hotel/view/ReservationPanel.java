@@ -61,28 +61,32 @@ public class ReservationPanel extends JPanel {
         reservationTable.setRowHeight(35);
         reservationTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
-        this.reservationTable.getColumn("Actions").setCellRenderer(new TableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
-                if (value instanceof JPanel) {
-                    JPanel panel = (JPanel) value;
-                    panel.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
-                    return panel;
-                }
-                return new JPanel();
+        this.reservationTable.getColumn("Actions").setCellRenderer((table, value, isSelected, hasFocus, row, column) -> {
+            if (value instanceof JPanel) {
+                JPanel panel = (JPanel) value;
+                panel.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
+                return panel;
             }
+
+            JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+            panel.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
+            
+            JButton cancelBtn = createButton("Cancel");
+            cancelBtn.setBackground(new Color(220, 53, 69)); // Red color for cancel button
+            
+            // Set fixed size for button
+            Dimension buttonSize = new Dimension(80, 25);
+            cancelBtn.setPreferredSize(buttonSize);
+            
+            cancelBtn.addActionListener(e -> cancelReservation((String) tableModel.getValueAt(row, 0)));
+            
+            panel.add(cancelBtn);
+            return panel;
         });
         
         // Remove the cell editor since we don't need to edit the buttons
-        this.reservationTable.getColumn("Actions").setCellEditor(null);
-        this.reservationTable.getColumn("Actions").setCellEditor(new DefaultCellEditor(new JTextField()) {
-            @Override
-            public Component getTableCellEditorComponent(JTable table, Object value,
-                    boolean isSelected, int row, int column) {
-                return (JPanel) value;
-            }
-        });
+        // Add button editor for handling button clicks
+        this.reservationTable.getColumn("Actions").setCellEditor(new ButtonEditor(reservationTable));
         JScrollPane scrollPane = new JScrollPane(reservationTable);
         add(scrollPane, BorderLayout.CENTER);
 
@@ -103,19 +107,34 @@ public class ReservationPanel extends JPanel {
 
     private JPanel createFormPanel() {
         JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.CENTER;
 
+        // Center the form components
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        
         // Add form components
-        addFormRow(formPanel, "Client ID:", clientIdField, gbc, 0);
-        addFormRow(formPanel, "Room Number:", roomNumberField, gbc, 1);
-        addFormRow(formPanel, "Check-In Date (yyyy-MM-dd):", checkInField, gbc, 2);
-        addFormRow(formPanel, "Check-Out Date (yyyy-MM-dd):", checkOutField, gbc, 3);
+        addFormRow(centerPanel, "Client ID:", clientIdField, gbc, 0);
+        addFormRow(centerPanel, "Room Number:", roomNumberField, gbc, 1);
+        addFormRow(centerPanel, "Check-In Date (yyyy-MM-dd):", checkInField, gbc, 2);
+        addFormRow(centerPanel, "Check-Out Date (yyyy-MM-dd):", checkOutField, gbc, 3);
 
         // Add buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton createButton = new JButton("Create Reservation");
         JButton clearButton = new JButton("Clear Form");
+
+        // Style the buttons
+        createButton.setBackground(new Color(51, 122, 183));
+        createButton.setForeground(Color.WHITE);
+        clearButton.setBackground(new Color(108, 117, 125));
+        clearButton.setForeground(Color.WHITE);
+        
+        createButton.setFocusPainted(false);
+        clearButton.setFocusPainted(false);
 
         createButton.addActionListener(e -> createReservation());
         clearButton.addActionListener(e -> clearForm());
@@ -123,10 +142,21 @@ public class ReservationPanel extends JPanel {
         buttonPanel.add(createButton);
         buttonPanel.add(clearButton);
 
+        // Add centerPanel to formPanel with proper constraints
+        GridBagConstraints centerConstraints = new GridBagConstraints();
+        centerConstraints.gridx = 0;
+        centerConstraints.gridy = 0;
+        centerConstraints.weightx = 1.0;
+        centerConstraints.weighty = 1.0;
+        centerConstraints.fill = GridBagConstraints.NONE;
+        centerConstraints.anchor = GridBagConstraints.CENTER;
+        formPanel.add(centerPanel, centerConstraints);
+
+        // Add button panel
         gbc.gridx = 0;
         gbc.gridy = 4;
         gbc.gridwidth = 2;
-        formPanel.add(buttonPanel, gbc);
+        centerPanel.add(buttonPanel, gbc);
 
         return formPanel;
     }
@@ -176,16 +206,10 @@ public class ReservationPanel extends JPanel {
             }
 
             // Generate invoice for the new reservation
-            try {
-                invoiceService.generateInvoice(reservation);
-                clearForm();
-                refreshTable();
-                JOptionPane.showMessageDialog(this, "Reservation created successfully");
-            } catch (Exception e) {
-                // If invoice generation fails, cancel the reservation
-                reservationService.cancelReservation(reservation.getId());
-                throw new Exception("Failed to generate invoice: " + e.getMessage());
-            }
+            invoiceService.generateInvoice(reservation);
+            clearForm();
+            refreshTable();
+            JOptionPane.showMessageDialog(this, "Reservation created successfully and invoice generated");
         } catch (DateTimeParseException e) {
             JOptionPane.showMessageDialog(this, "Please enter valid dates in yyyy-MM-dd format");
         } catch (Exception e) {
@@ -296,6 +320,7 @@ public class ReservationPanel extends JPanel {
         tableModel.setRowCount(0);
         List<Reservation> reservations = reservationService.getAllReservations();
         for (Reservation reservation : reservations) {
+            JPanel actionPanel = createActionPanel(reservation);
             Object[] row = {
                 reservation.getId(),
                 reservation.getClient().getName(),
@@ -304,192 +329,137 @@ public class ReservationPanel extends JPanel {
                 reservation.getCheckOutDate().format(DATE_FORMATTER),
                 String.format("$%.2f", reservation.getTotalPrice()),
                 reservation.isCancelled() ? "Cancelled" : "Active",
-                createActionPanel(reservation)
+                actionPanel
             };
             tableModel.addRow(row);
         }
+        
+        // Set the row height to accommodate the buttons
+        reservationTable.setRowHeight(35);
+        
+        // Ensure the Actions column uses the custom renderer
+        reservationTable.getColumn("Actions").setCellRenderer(new TableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                    boolean isSelected, boolean hasFocus, int row, int column) {
+                if (value instanceof JPanel) {
+                    JPanel panel = (JPanel) value;
+                    panel.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
+                    return panel;
+                }
+                return new JLabel();
+            }
+        });
     }
 
-//     private JPanel createActionPanel(Reservation reservation) {
-//         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
-//         panel.setOpaque(true);
-        
-//         JButton editButton = createStyledButton("Edit");
-//         JButton cancelButton = createStyledButton("Cancel");
-//         JButton viewInvoiceButton = createStyledButton("View Invoice");
-//         JButton copyClientIdButton = createStyledButton("Copy Client ID");
-//         JButton copyRoomIdButton = createStyledButton("Copy Room ID");
-
-//         // Disable buttons if reservation is cancelled
-//         editButton.setEnabled(!reservation.isCancelled());
-//         cancelButton.setEnabled(!reservation.isCancelled());
-
-//         editButton.addActionListener(e -> showEditDialog(reservation));
-        
-//         cancelButton.addActionListener(e -> {
-//             if (!reservation.isCancelled()) {
-//                 int confirm = JOptionPane.showConfirmDialog(this,
-//                         "Are you sure you want to cancel this reservation?",
-//                         "Confirm Cancellation",
-//                         JOptionPane.YES_NO_OPTION);
-//                 if (confirm == JOptionPane.YES_OPTION) {
-//                     try {
-//                         reservationService.cancelReservation(reservation.getId());
-//                         refreshTable();
-//                     } catch (Exception ex) {
-//                         JOptionPane.showMessageDialog(this, "Error cancelling reservation: " + ex.getMessage());
-//                     }
-//                 }
-//             }
-//         });
-
-//         viewInvoiceButton.addActionListener(e -> {
-//             try {
-//                 invoiceService.getInvoicesForReservation(reservation.getId())
-//                         .stream()
-//                         .findFirst()
-//                         .ifPresentOrElse(invoice -> {
-//                             try {
-//                                 String pdfPath = PDFGenerator.generateInvoicePDF(invoice);
-//                                 if (pdfPath == null || pdfPath.isEmpty()) {
-//                                     throw new Exception("Failed to generate PDF");
-//                                 }
-//                                 File pdfFile = new File(pdfPath);
-//                                 if (!pdfFile.exists()) {
-//                                     throw new Exception("PDF file not found");
-//                                 }
-//                                 Desktop.getDesktop().open(pdfFile);
-//                             } catch (Exception ex) {
-//                                 JOptionPane.showMessageDialog(this, "Error opening PDF: " + ex.getMessage());
-//                             }
-//                         }, () -> JOptionPane.showMessageDialog(this, "No invoice found for this reservation"));
-//             } catch (Exception ex) {
-//                 JOptionPane.showMessageDialog(this, "Error processing invoice: " + ex.getMessage());
-//             }
-//         });
-
-//         copyClientIdButton.addActionListener(e -> {
-//             try {
-//                 StringSelection selection = new StringSelection(reservation.getClient().getId());
-//                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
-//             } catch (Exception ex) {
-//                 JOptionPane.showMessageDialog(this, "Error copying client ID: " + ex.getMessage());
-//             }
-//         });
-
-//         copyRoomIdButton.addActionListener(e -> {
-//             try {
-//                 StringSelection selection = new StringSelection(reservation.getRoom().getNumber());
-//                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
-//             } catch (Exception ex) {
-//                 JOptionPane.showMessageDialog(this, "Error copying room ID: " + ex.getMessage());
-//             }
-//         });
-
-//         panel.add(editButton);
-//         panel.add(cancelButton);
-//         panel.add(viewInvoiceButton);
-//         panel.add(copyClientIdButton);
-//         panel.add(copyRoomIdButton);
-
-//         return panel;
-//     }
-// }
-
-    private JButton createStyledButton(String text) {
+    private JButton createButton(String text) {
         JButton button = new JButton(text);
-        button.setFont(button.getFont().deriveFont(11f));
-        button.setMargin(new Insets(1, 3, 1, 3));
-        button.setFocusPainted(false);
-        button.setBackground(new Color(51, 122, 183));
         button.setForeground(Color.WHITE);
-        button.setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 6));
-        button.setPreferredSize(new Dimension(90, 25));
+        if (text.equals("Cancel")) {
+            button.setBackground(new Color(220, 53, 69)); // Red color for cancel button
+        } else {
+            button.setBackground(new Color(51, 122, 183)); // Blue color for other buttons
+        }
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setOpaque(true);
         return button;
+    }
+
+    class ButtonEditor extends DefaultCellEditor {
+        private JPanel panel;
+        private String reservationId;
+        private JTable table;
+
+        public ButtonEditor(JTable table) {
+            super(new JTextField());
+            this.table = table;
+            this.panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+            setClickCountToStart(1);
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            this.reservationId = (String) table.getModel().getValueAt(row, 0);
+            
+            panel.removeAll();
+            panel.setBackground(table.getSelectionBackground());
+            
+            JButton cancelButton = createButton("Cancel");
+            cancelButton.setEnabled(!((String)table.getModel().getValueAt(row, 6)).equals("Cancelled"));
+            
+            Dimension buttonSize = new Dimension(80, 25);
+            cancelButton.setPreferredSize(buttonSize);
+            
+            ReservationPanel reservationPanel = (ReservationPanel) SwingUtilities.getAncestorOfClass(ReservationPanel.class, table);
+            if (reservationPanel != null) {
+                cancelButton.addActionListener(e -> {
+                    stopCellEditing();
+                    int confirm = JOptionPane.showConfirmDialog(reservationPanel,
+                        "Are you sure you want to cancel this reservation?",
+                        "Confirm Cancellation",
+                        JOptionPane.YES_NO_OPTION);
+
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        reservationPanel.cancelReservation(reservationId);
+                    }
+                });
+            }
+            
+            panel.add(cancelButton);
+            return panel;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            return panel;
+        }
     }
 
     private JPanel createActionPanel(Reservation reservation) {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
         panel.setOpaque(true);
         
-        JButton editButton = new JButton("Edit");
-        JButton cancelButton = new JButton("Cancel");
-        JButton viewInvoiceButton = new JButton("View Invoice");
-        JButton copyClientIdButton = new JButton("Copy Client ID");
-        JButton copyRoomIdButton = new JButton("Copy Room ID");
-
-        // Disable buttons if reservation is cancelled
-        editButton.setEnabled(!reservation.isCancelled());
+        JButton cancelButton = createButton("Cancel");
         cancelButton.setEnabled(!reservation.isCancelled());
-
-        editButton.addActionListener(e -> showEditDialog(reservation));
         
-        cancelButton.addActionListener(e -> {
-            if (!reservation.isCancelled()) {
-                int confirm = JOptionPane.showConfirmDialog(this,
-                        "Are you sure you want to cancel this reservation?",
-                        "Confirm Cancellation",
-                        JOptionPane.YES_NO_OPTION);
-                if (confirm == JOptionPane.YES_OPTION) {
-                    try {
-                        reservationService.cancelReservation(reservation.getId());
-                        refreshTable();
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(this, "Error cancelling reservation: " + ex.getMessage());
-                    }
-                }
-            }
-        });
-
-        viewInvoiceButton.addActionListener(e -> {
-            try {
-                invoiceService.getInvoicesForReservation(reservation.getId())
-                        .stream()
-                        .findFirst()
-                        .ifPresentOrElse(invoice -> {
-                            try {
-                                String pdfPath = PDFGenerator.generateInvoicePDF(invoice);
-                                if (pdfPath == null || pdfPath.isEmpty()) {
-                                    throw new Exception("Failed to generate PDF");
-                                }
-                                File pdfFile = new File(pdfPath);
-                                if (!pdfFile.exists()) {
-                                    throw new Exception("PDF file not found");
-                                }
-                                Desktop.getDesktop().open(pdfFile);
-                            } catch (Exception ex) {
-                                JOptionPane.showMessageDialog(this, "Error opening PDF: " + ex.getMessage());
-                            }
-                        }, () -> JOptionPane.showMessageDialog(this, "No invoice found for this reservation"));
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error processing invoice: " + ex.getMessage());
-            }
-        });
-
-        copyClientIdButton.addActionListener(e -> {
-            try {
-                StringSelection selection = new StringSelection(reservation.getClient().getId());
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error copying client ID: " + ex.getMessage());
-            }
-        });
-
-        copyRoomIdButton.addActionListener(e -> {
-            try {
-                StringSelection selection = new StringSelection(reservation.getRoom().getNumber());
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error copying room ID: " + ex.getMessage());
-            }
-        });
-
-        panel.add(editButton);
+        // Set fixed size for button
+        Dimension buttonSize = new Dimension(80, 25);
+        cancelButton.setPreferredSize(buttonSize);
+        
         panel.add(cancelButton);
-        panel.add(viewInvoiceButton);
-        panel.add(copyClientIdButton);
-        panel.add(copyRoomIdButton);
-
         return panel;
     }
+
+
+private void cancelReservation(String reservationId) {
+    if (reservationId == null || reservationId.isEmpty()) {
+        JOptionPane.showMessageDialog(this,
+            "Please select a reservation to cancel",
+            "Error",
+            JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+
+    int confirm = JOptionPane.showConfirmDialog(this,
+        "Are you sure you want to cancel this reservation?",
+        "Confirm Cancellation",
+        JOptionPane.YES_NO_OPTION);
+
+    if (confirm == JOptionPane.YES_OPTION) {
+        try {
+            reservationService.cancelReservation(reservationId);
+            refreshTable(); // Refresh the table to show updated status
+            JOptionPane.showMessageDialog(this,
+                "Reservation cancelled successfully",
+                "Success",
+                JOptionPane.INFORMATION_MESSAGE);
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this,
+                "Error cancelling reservation: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+}
 }

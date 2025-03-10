@@ -136,18 +136,62 @@ public class RoomPanel extends JPanel {
     private JPanel createFormPanel() {
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(5, 10, 5, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
 
-        // Add form components
-        addFormRow(formPanel, "Room Number:", roomNumberField, gbc, 0);
-        addFormRow(formPanel, "Category:", categoryComboBox, gbc, 1);
-        addFormRow(formPanel, "Rate per Night:", rateField, gbc, 2);
-        addFormRow(formPanel, "Amenities:", amenitiesField, gbc, 3);
+        // Add form components with proper constraints
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 1;
+        gbc.anchor = GridBagConstraints.EAST;
+        formPanel.add(new JLabel("Room Number:"), gbc);
 
-        // Add buttons
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        formPanel.add(roomNumberField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.EAST;
+        formPanel.add(new JLabel("Category:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        formPanel.add(categoryComboBox, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.EAST;
+        formPanel.add(new JLabel("Rate per Night:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        formPanel.add(rateField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.EAST;
+        formPanel.add(new JLabel("Amenities:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        formPanel.add(amenitiesField, gbc);
+
+        // Add buttons with proper alignment
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         JButton addButton = new JButton("Add Room");
         JButton clearButton = new JButton("Clear Form");
+
+        // Style the buttons consistently
+        addButton.setPreferredSize(new Dimension(100, 30));
+        clearButton.setPreferredSize(new Dimension(100, 30));
+        addButton.setBackground(new Color(51, 122, 183));
+        clearButton.setBackground(new Color(51, 122, 183));
+        addButton.setForeground(Color.WHITE);
+        clearButton.setForeground(Color.WHITE);
+        addButton.setFocusPainted(false);
+        clearButton.setFocusPainted(false);
 
         addButton.addActionListener(e -> addRoom());
         clearButton.addActionListener(e -> clearForm());
@@ -158,21 +202,14 @@ public class RoomPanel extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 4;
         gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(15, 10, 5, 10);
         formPanel.add(buttonPanel, gbc);
 
+        // Add some padding around the form
+        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
         return formPanel;
-    }
-
-    private void addFormRow(JPanel panel, String label, JComponent field, GridBagConstraints gbc, int row) {
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.gridwidth = 1;
-        gbc.anchor = GridBagConstraints.EAST;
-        panel.add(new JLabel(label), gbc);
-
-        gbc.gridx = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-        panel.add(field, gbc);
     }
 
     private void addRoom() {
@@ -294,25 +331,15 @@ public class RoomPanel extends JPanel {
             if (roomPanel != null) {
                 editBtn.addActionListener(e -> {
                     stopCellEditing();
-                    roomPanel.selectedRoomNumber = roomNumber;
-                    Room room = roomPanel.roomService.findRoomByNumber(roomNumber).orElse(null);
-                    if (room != null) {
-                        roomPanel.roomNumberField.setText(room.getNumber());
-                        roomPanel.categoryComboBox.setSelectedItem(room.getCategory());
-                        roomPanel.rateField.setText(String.valueOf(room.getRatePerNight()));
-                        roomPanel.amenitiesField.setText(room.getAmenities());
-                    }
+                    roomPanel.showEditDialog(row);
                 });
                 copyBtn.addActionListener(e -> {
                     stopCellEditing();
-                    StringSelection selection = new StringSelection(roomNumber);
-                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
-                    JOptionPane.showMessageDialog(roomPanel, "Room number copied to clipboard!", "Copy Success", JOptionPane.INFORMATION_MESSAGE);
+                    roomPanel.copyRoomNumber(row);
                 });
                 deleteBtn.addActionListener(e -> {
                     stopCellEditing();
-                    roomPanel.selectedRoomNumber = roomNumber;
-                    roomPanel.deleteRoom();
+                    roomPanel.deleteRoom(row);
                 });
             }
             
@@ -326,6 +353,106 @@ public class RoomPanel extends JPanel {
         @Override
         public Object getCellEditorValue() {
             return panel;
+        }
+    }
+
+    private void addFormField(JPanel panel, String label, Component field, GridBagConstraints gbc) {
+        gbc.gridx = 0;
+        gbc.gridy = GridBagConstraints.RELATIVE;
+        gbc.anchor = GridBagConstraints.EAST;
+        panel.add(new JLabel(label), gbc);
+
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel.add(field, gbc);
+    }
+
+    private void showEditDialog(int row) {
+        String roomNumber = (String) tableModel.getValueAt(row, 0);
+        Room room = roomService.findRoomByNumber(roomNumber).orElse(null);
+        if (room != null) {
+            JDialog editDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Edit Room", true);
+            editDialog.setLayout(new BorderLayout(10, 10));
+
+            JPanel formPanel = new JPanel(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(5, 5, 5, 5);
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+
+            // Create form fields
+            JTextField roomNumberField = new JTextField(room.getNumber());
+            roomNumberField.setEditable(false); // Room number should not be editable
+            JComboBox<RoomCategory> categoryComboBox = new JComboBox<>(RoomCategory.values());
+            categoryComboBox.setSelectedItem(room.getCategory());
+            JTextField rateField = new JTextField(String.valueOf(room.getRatePerNight()));
+            JTextField amenitiesField = new JTextField(room.getAmenities());
+
+            // Add fields to form
+            addFormField(formPanel, "Room Number:", roomNumberField, gbc);
+            addFormField(formPanel, "Category:", categoryComboBox, gbc);
+            addFormField(formPanel, "Rate per Night:", rateField, gbc);
+            addFormField(formPanel, "Amenities:", amenitiesField, gbc);
+
+            // Add buttons
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            JButton saveButton = new JButton("Save");
+            JButton cancelButton = new JButton("Cancel");
+
+            saveButton.addActionListener(e -> {
+                try {
+                    double rate = Double.parseDouble(rateField.getText());
+                    if (rate <= 0) {
+                        JOptionPane.showMessageDialog(editDialog, "Rate must be greater than 0");
+                        return;
+                    }
+
+                    roomService.updateRoom(
+                        roomNumber,
+                        (RoomCategory) categoryComboBox.getSelectedItem(),
+                        rate,
+                        amenitiesField.getText().trim()
+                    );
+                    editDialog.dispose();
+                    refreshTable();
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(editDialog, "Please enter a valid rate");
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(editDialog, "Error updating room: " + ex.getMessage());
+                }
+            });
+
+            cancelButton.addActionListener(e -> editDialog.dispose());
+
+            buttonPanel.add(saveButton);
+            buttonPanel.add(cancelButton);
+
+            editDialog.add(formPanel, BorderLayout.CENTER);
+            editDialog.add(buttonPanel, BorderLayout.SOUTH);
+
+            editDialog.pack();
+            editDialog.setLocationRelativeTo(this);
+            editDialog.setVisible(true);
+        }
+    }
+
+    private void copyRoomNumber(int row) {
+        String roomNumber = (String) tableModel.getValueAt(row, 0);
+        StringSelection selection = new StringSelection(roomNumber);
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
+        JOptionPane.showMessageDialog(this, "Room number copied to clipboard!", "Copy Success", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void deleteRoom(int row) {
+        String roomNumber = (String) tableModel.getValueAt(row, 0);
+        int confirm = JOptionPane.showConfirmDialog(
+            this,
+            "Are you sure you want to delete this room?",
+            "Confirm Delete",
+            JOptionPane.YES_NO_OPTION
+        );
+        if (confirm == JOptionPane.YES_OPTION) {
+            roomService.deleteRoom(roomNumber);
+            refreshTable();
         }
     }
 
