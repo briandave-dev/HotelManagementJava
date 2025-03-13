@@ -15,6 +15,14 @@ public class Room {
         this.isOccupied = false;
     }
 
+    public Room(String number, RoomCategory category, double ratePerNight, boolean isOccupied, String amenities) {
+        this.number = number;
+        this.category = category;
+        this.ratePerNight = ratePerNight;
+        this.amenities = amenities;
+        this.isOccupied = isOccupied;
+    }
+
     public String getNumber() {
         return number;
     }

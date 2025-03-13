@@ -38,7 +38,7 @@ public class ClientPanel extends JPanel {
         this.addressField = new JTextField(20);
         this.phoneField = new JTextField(20);
         this.emailField = new JTextField(20);
-
+        
         setupTable();
         setupLayout();
         refreshTable();
@@ -260,7 +260,6 @@ public class ClientPanel extends JPanel {
     private void showEditDialog(int row) {
         editDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Edit Client", true);
         editDialog.setLayout(new BorderLayout(10, 10));
-
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
@@ -270,6 +269,7 @@ public class ClientPanel extends JPanel {
         String clientId = (String) tableModel.getValueAt(row, 0);
         Client client = clientService.findClientById(clientId).orElse(null);
         if (client != null) {
+
             // Create form fields
             JTextField firstNameField = new JTextField(client.getFirstName());
             JTextField lastNameField = new JTextField(client.getLastName());

@@ -3,21 +3,15 @@ package com.hotel.view;
 import com.hotel.model.Reservation;
 import com.hotel.service.ReservationService;
 import com.hotel.service.InvoiceService;
-import com.hotel.util.PDFGenerator;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
-import java.awt.datatransfer.StringSelection;
-import java.awt.Toolkit;
-import java.io.File;
-import java.util.Optional;
 
 public class ReservationPanel extends JPanel {
     private final ReservationService reservationService;

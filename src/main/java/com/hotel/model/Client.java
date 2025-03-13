@@ -22,6 +22,15 @@ public class Client {
         this.email = email;
         this.reservationHistory = new ArrayList<>();
     }
+    public Client(String id,String firstName, String lastName, String address, String phoneNumber, String email) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.address = address;
+        this.phoneNumber = phoneNumber;
+        this.email = email;
+        this.reservationHistory = new ArrayList<>();
+    }
 
     public String getId() {
         return id;

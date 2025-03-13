@@ -26,6 +26,17 @@ public class Invoice {
         this.isPaid = false;
     }
 
+    public Invoice(String id, Reservation reservation,LocalDateTime generDate , double tax, double total, boolean isPaid) {
+        this.id = id;
+        this.reservation = reservation;
+        this.generationDate = generDate;
+        this.additionalServices = new ArrayList<>();
+        this.subtotal = reservation.getTotalPrice();
+        this.tax = tax;
+        this.total = total;
+        this.isPaid = isPaid;
+    }
+
     public void addAdditionalService(String description, double price) {
         additionalServices.add(new AdditionalService(description, price));
         recalculateTotal();
@@ -74,21 +85,5 @@ public class Invoice {
         isPaid = paid;
     }
 
-    private static class AdditionalService {
-        private final String description;
-        private final double price;
-
-        public AdditionalService(String description, double price) {
-            this.description = description;
-            this.price = price;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public double getPrice() {
-            return price;
-        }
-    }
+    
 }

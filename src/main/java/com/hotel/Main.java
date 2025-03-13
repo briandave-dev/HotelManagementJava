@@ -1,8 +1,9 @@
 package com.hotel;
 
-import com.hotel.view.MainFrame;
 
 import javax.swing.SwingUtilities;
+
+import com.hotel.view.MainFrame;
 
 public class Main {
     public static void main(String[] args) {

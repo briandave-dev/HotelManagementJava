@@ -2,6 +2,8 @@ package com.hotel.view;
 
 import com.hotel.model.Invoice;
 import com.hotel.service.InvoiceService;
+import com.hotel.service.ReservationService;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -10,12 +12,14 @@ import java.awt.event.ActionEvent;
 
 public class InvoicePanel extends JPanel {
     private final InvoiceService invoiceService;
+    private final ReservationService reservationService;
     private JTable invoiceTable;
     private DefaultTableModel tableModel;
     private JDialog editDialog;
 
-    public InvoicePanel(InvoiceService invoiceService) {
+    public InvoicePanel(InvoiceService invoiceService, ReservationService reservationService) {
         this.invoiceService = invoiceService;
+        this.reservationService = reservationService;
         setLayout(new BorderLayout());
         initializeComponents();
     }
@@ -188,7 +192,7 @@ public class InvoicePanel extends JPanel {
 
     private void refreshInvoiceList() {
         tableModel.setRowCount(0);
-        invoiceService.getAllInvoices().forEach(invoice -> {
+        invoiceService.getAllInvoices(reservationService).forEach(invoice -> {
             Object[] row = {
                 invoice.getId(),
                 invoice.getReservation().getId(),

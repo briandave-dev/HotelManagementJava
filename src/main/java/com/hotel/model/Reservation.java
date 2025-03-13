@@ -25,7 +25,16 @@ public class Reservation {
         room.setOccupied(true);
         client.addReservation(this);
     }
-
+    public Reservation(String id, Client client, Room room, LocalDate checkInDate, LocalDate checkOutDate, double totalPrice, boolean isCancelled) {
+        this.id = id;
+        this.client = client;
+        this.room = room;
+        this.checkInDate = checkInDate;
+        this.checkOutDate = checkOutDate;
+        this.totalPrice = totalPrice;
+        this.isCancelled = isCancelled;
+        
+    }
     private double calculateTotalPrice() {
         long numberOfNights = ChronoUnit.DAYS.between(checkInDate, checkOutDate);
         return numberOfNights * room.getRatePerNight();

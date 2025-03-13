@@ -19,8 +19,9 @@ public class MainFrame extends JFrame {
 
     public MainFrame() {
         // Initialize services
-        this.clientService = new ClientService();
+       
         this.roomService = new RoomService();
+        this.clientService = new ClientService(roomService);
         this.reservationService = new ReservationService(roomService, clientService);
         this.invoiceService = new InvoiceService(0.20); // 20% tax rate
 
@@ -74,7 +75,7 @@ public class MainFrame extends JFrame {
         mainPanel.add(new ClientPanel(clientService), "clients");
         mainPanel.add(new RoomPanel(roomService), "rooms");
         mainPanel.add(new ReservationPanel(reservationService, invoiceService), "reservations");
-        mainPanel.add(new InvoicePanel(invoiceService), "invoices");
+        mainPanel.add(new InvoicePanel(invoiceService,reservationService), "invoices");
 
         // Add welcome panel
         JPanel welcomePanel = createWelcomePanel();
