@@ -92,35 +92,31 @@ public class ReservationPanel extends JPanel {
     }
 
     private JPanel createFormPanel() {
+        // Create form panel with rounded borders and styling
         JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        formPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
+            BorderFactory.createEmptyBorder(15, 15, 15, 15)
+        ));
+        formPanel.setBackground(new Color(245, 245, 245));
+        
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.anchor = GridBagConstraints.WEST;
 
-        // Center the form components
-        JPanel centerPanel = new JPanel(new GridBagLayout());
+        // Add form fields with improved styling
+        addFormField(formPanel, "Client ID:", clientIdField, gbc, 0);
+        addFormField(formPanel, "Room Number:", roomNumberField, gbc, 1);
+        addFormField(formPanel, "Check-In Date (yyyy-MM-dd):", checkInField, gbc, 2);
+        addFormField(formPanel, "Check-Out Date (yyyy-MM-dd):", checkOutField, gbc, 3);
+
+        // Add buttons with improved styling
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        buttonPanel.setOpaque(false);
         
-        // Add form components
-        addFormRow(centerPanel, "Client ID:", clientIdField, gbc, 0);
-        addFormRow(centerPanel, "Room Number:", roomNumberField, gbc, 1);
-        addFormRow(centerPanel, "Check-In Date (yyyy-MM-dd):", checkInField, gbc, 2);
-        addFormRow(centerPanel, "Check-Out Date (yyyy-MM-dd):", checkOutField, gbc, 3);
-
-        // Add buttons
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton createButton = new JButton("Create Reservation");
-        JButton clearButton = new JButton("Clear Form");
-
-        // Style the buttons
-        createButton.setBackground(new Color(51, 122, 183));
-        createButton.setForeground(Color.WHITE);
-        clearButton.setBackground(new Color(108, 117, 125));
-        clearButton.setForeground(Color.WHITE);
-        
-        createButton.setFocusPainted(false);
-        clearButton.setFocusPainted(false);
+        JButton createButton = createStyledButton("Create Reservation", new Color(40, 167, 69));
+        JButton clearButton = createStyledButton("Clear Form", new Color(108, 117, 125));
 
         createButton.addActionListener(e -> createReservation());
         clearButton.addActionListener(e -> clearForm());
@@ -128,35 +124,67 @@ public class ReservationPanel extends JPanel {
         buttonPanel.add(createButton);
         buttonPanel.add(clearButton);
 
-        // Add centerPanel to formPanel with proper constraints
-        GridBagConstraints centerConstraints = new GridBagConstraints();
-        centerConstraints.gridx = 0;
-        centerConstraints.gridy = 0;
-        centerConstraints.weightx = 1.0;
-        centerConstraints.weighty = 1.0;
-        centerConstraints.fill = GridBagConstraints.NONE;
-        centerConstraints.anchor = GridBagConstraints.CENTER;
-        formPanel.add(centerPanel, centerConstraints);
-
-        // Add button panel
-        gbc.gridx = 0;
         gbc.gridy = 4;
+        gbc.gridx = 0;
         gbc.gridwidth = 2;
-        centerPanel.add(buttonPanel, gbc);
+        gbc.anchor = GridBagConstraints.CENTER;
+        formPanel.add(buttonPanel, gbc);
 
-        return formPanel;
+        // Create a wrapper panel to center the form
+        JPanel wrapperPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        wrapperPanel.add(formPanel);
+        wrapperPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+
+        // Add title
+        JLabel titleLabel = new JLabel("Reservation Management", JLabel.CENTER);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.add(titleLabel, BorderLayout.CENTER);
+        
+        // Create a main content panel
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.add(headerPanel, BorderLayout.NORTH);
+        contentPanel.add(wrapperPanel, BorderLayout.CENTER);
+        
+        return contentPanel;
     }
 
-    private void addFormRow(JPanel panel, String label, JTextField field, GridBagConstraints gbc, int row) {
+    // Helper method to add form fields with consistent styling
+    private void addFormField(JPanel panel, String labelText, JComponent field, GridBagConstraints gbc, int row) {
         gbc.gridx = 0;
         gbc.gridy = row;
-        gbc.gridwidth = 1;
-        gbc.anchor = GridBagConstraints.EAST;
-        panel.add(new JLabel(label), gbc);
+        gbc.weightx = 0.3;
+        
+        JLabel label = new JLabel(labelText);
+        label.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        panel.add(label, gbc);
 
         gbc.gridx = 1;
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0.7;
+        
+        if (field instanceof JTextField) {
+            ((JTextField) field).setPreferredSize(new Dimension(field.getPreferredSize().width, 30));
+            field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
+                BorderFactory.createEmptyBorder(2, 5, 2, 5)
+            ));
+        }
         panel.add(field, gbc);
+    }
+
+    // Create styled button with consistent appearance
+    private JButton createStyledButton(String text, Color bgColor) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        button.setForeground(Color.WHITE);
+        button.setBackground(bgColor);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setPreferredSize(new Dimension(120, 35));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return button;
     }
 
     private void createReservation() {
@@ -234,16 +262,27 @@ public class ReservationPanel extends JPanel {
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
         JTextField checkInField = new JTextField(reservation.getCheckInDate().format(DATE_FORMATTER), 15);
         JTextField checkOutField = new JTextField(reservation.getCheckOutDate().format(DATE_FORMATTER), 15);
 
-        addFormRow(formPanel, "Check-In Date:", checkInField, gbc, 0);
-        addFormRow(formPanel, "Check-Out Date:", checkOutField, gbc, 1);
+        // Use addFormField instead of addFormRow for consistency
+        addFormField(formPanel, "Check-In Date:", checkInField, gbc, 0);
+        addFormField(formPanel, "Check-Out Date:", checkOutField, gbc, 1);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton saveButton = new JButton("Save");
         JButton cancelButton = new JButton("Cancel");
+
+        // Apply consistent styling to buttons
+        saveButton.setBackground(new Color(51, 122, 183));
+        saveButton.setForeground(Color.WHITE);
+        saveButton.setFocusPainted(false);
+        
+        cancelButton.setBackground(new Color(108, 117, 125));
+        cancelButton.setForeground(Color.WHITE);
+        cancelButton.setFocusPainted(false);
 
         saveButton.addActionListener(e -> {
             try {

@@ -217,7 +217,7 @@ public class RoomService {
                      "categoryDN VARCHAR(20) NOT NULL," +
                      "ratePerNight Double NOT NULL," +
                      "isOccupied boolean NOT NULL default false," +
-                     "amenities VARCHAR(20) NOT NULL," +
+                     "amenities TEXT NOT NULL," +
                      "FOREIGN KEY (categoryDN) REFERENCES category(displayName) ON DELETE CASCADE);";
         
         try (Connection conn = DatabaseConnection.getConnection();
