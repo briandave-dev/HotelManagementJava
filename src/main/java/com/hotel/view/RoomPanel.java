@@ -267,6 +267,8 @@ public class RoomPanel extends JPanel {
                     (RoomCategory) categoryComboBox.getSelectedItem(),
                     rate,
                     amenitiesField.getText().trim());
+                    showToast("Room added successfully!", false);
+
             clearForm();
             refreshTable();
         } catch (NumberFormatException e) {
@@ -294,6 +296,8 @@ public class RoomPanel extends JPanel {
                     (RoomCategory) categoryComboBox.getSelectedItem(),
                     rate,
                     amenitiesField.getText().trim());
+                    showToast("Room updated successfully!", false);
+
             clearForm();
             refreshTable();
         } catch (NumberFormatException e) {
@@ -317,6 +321,7 @@ public class RoomPanel extends JPanel {
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 roomService.deleteRoom(selectedRoomNumber);
+                showToast("Room deleted successfully!", true);
                 clearForm();
                 refreshTable();
             } catch (Exception e) {
@@ -390,6 +395,7 @@ public class RoomPanel extends JPanel {
                             (RoomCategory) categoryComboBox.getSelectedItem(),
                             rate,
                             amenitiesField.getText().trim());
+                            showToast("Room updated successfully!", false);
                     editDialog.dispose();
                     refreshTable();
                 } catch (NumberFormatException ex) {
@@ -429,6 +435,7 @@ public class RoomPanel extends JPanel {
                 JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             roomService.deleteRoom(roomNumber);
+            showToast("Room deleted successfully!", true);
             refreshTable();
         }
     }
