@@ -114,11 +114,9 @@ public class RoomPanel extends JPanel {
 
             String roomNumber = (String) tableModel.getValueAt(row, 0);
 
-            // JButton editBtn = createButton("Edit");
-            JButton editBtn = createStyledButton("Edit", new Color(51,122, 183));
+            JButton editBtn = createStyledButton("Edit", PRIMARY_BLUE);
             JButton copyBtn = createStyledButton("Copy ID", PRIMARY_BLUE);
             JButton deleteBtn = createStyledButton("Delete", DANGER_RED);
-            // deleteBtn.setBackground(new Color(220, 53, 69)); // Red color for delete button
 
             // Set fixed size for buttons
             Dimension buttonSize = new Dimension(100, 25);

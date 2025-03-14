@@ -78,13 +78,13 @@ public class ClientPanel extends JPanel {
             }
             
             String clientId = (String) tableModel.getValueAt(row, 0);
-            JButton editBtn = createButton("Edit");
-            JButton copyBtn = createButton("Copy ID");
-            JButton deleteBtn = createButton("Delete");
-            deleteBtn.setBackground(DANGER_RED); // Red color for delete button
+            JButton editBtn = createStyledButton("Edit", PRIMARY_BLUE);
+            JButton copyBtn = createStyledButton("Copy ID", PRIMARY_BLUE);
+            JButton deleteBtn = createStyledButton("Delete", DANGER_RED);
+            // deleteBtn.setBackground(DANGER_RED); // Red color for delete button
             
             // Set fixed size for buttons
-            Dimension buttonSize = new Dimension(60, 25);
+            Dimension buttonSize = new Dimension(85, 25);
             editBtn.setPreferredSize(buttonSize);
             copyBtn.setPreferredSize(buttonSize);
             deleteBtn.setPreferredSize(buttonSize);
@@ -133,13 +133,13 @@ public class ClientPanel extends JPanel {
             panel.setBackground(table.getBackground()); // Keep default background instead of selection color
             
             // Create buttons with the same styling as in your renderer
-            JButton editBtn = createButton("Edit");
-            JButton copyBtn = createButton("Copy ID");
-            JButton deleteBtn = createButton("Delete");
-            deleteBtn.setBackground(DANGER_RED); // Red color for delete button
+            JButton editBtn = createStyledButton("Edit", PRIMARY_BLUE);
+            JButton copyBtn = createStyledButton("Copy ID", PRIMARY_BLUE);
+            JButton deleteBtn = createStyledButton("Delete", DANGER_RED);
+            // deleteBtn.setBackground(DANGER_RED); // Red color for delete button
             
             // Set fixed size for buttons
-            Dimension buttonSize = new Dimension(60, 25);
+            Dimension buttonSize = new Dimension(85, 25);
             editBtn.setPreferredSize(buttonSize);
             copyBtn.setPreferredSize(buttonSize);
             deleteBtn.setPreferredSize(buttonSize);
@@ -356,7 +356,7 @@ public class ClientPanel extends JPanel {
                     client.getAddress(), client.getPhoneNumber(), client.getEmail());
                 editDialog.dispose();
                 refreshTable();
-                showToast("Client updated successfully!");
+                showToast("Client updated successfully!", false);
             });
 
             cancelButton.addActionListener(e -> editDialog.dispose());
@@ -396,7 +396,7 @@ public class ClientPanel extends JPanel {
                 newClient.getAddress(), newClient.getPhoneNumber(), newClient.getEmail());
             clearForm();
             refreshTable();
-            showToast("Client added successfully!");
+            showToast("Client added successfully!", false);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error adding client: " + e.getMessage());
         }
@@ -450,7 +450,7 @@ public class ClientPanel extends JPanel {
         String clientId = (String) tableModel.getValueAt(row, 0);
         StringSelection selection = new StringSelection(clientId);
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
-        showToast("Client ID copied to clipboard!");
+        showToast("Client ID copied to clipboard!", false);
     }
 
     private void deleteClient(int row) {
@@ -464,7 +464,7 @@ public class ClientPanel extends JPanel {
         if (confirm == JOptionPane.YES_OPTION) {
             clientService.deleteClient(clientId);
             refreshTable();
-            showToast("Client deleted successfully!");
+            showToast("Client deleted successfully!", true);
         }
     }
 
@@ -495,38 +495,38 @@ public class ClientPanel extends JPanel {
         clientTable.clearSelection();
     }
     
-    // Add a toast notification method
-    private void showToast(String message) {
-        JDialog toastDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this));
-        toastDialog.setUndecorated(true);
-        toastDialog.setLayout(new BorderLayout());
-        
-        JPanel toastPanel = new JPanel();
-        toastPanel.setBackground(new Color(51, 51, 51, 230));
-        toastPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        toastPanel.setLayout(new BorderLayout());
-        
-        JLabel toastLabel = new JLabel(message);
-        toastLabel.setForeground(Color.WHITE);
-        toastLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        toastPanel.add(toastLabel, BorderLayout.CENTER);
-        
-        toastDialog.add(toastPanel);
-        toastDialog.pack();
-        
-        // Center toast relative to parent window
-        Frame owner = (Frame) SwingUtilities.getWindowAncestor(this);
-        if (owner != null) {
-            int x = owner.getX() + (owner.getWidth() - toastDialog.getWidth()) / 2;
-            int y = owner.getY() + owner.getHeight() - toastDialog.getHeight() - 50;
-            toastDialog.setLocation(x, y);
-        }
-        
-        toastDialog.setVisible(true);
-        
-        // Auto-hide toast after 2 seconds
-        new Timer(2000, e -> {
-            toastDialog.dispose();
-        }).start();
+// Add a toast notification method
+private void showToast(String message, Boolean isError) {
+    JDialog toastDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this));
+    toastDialog.setUndecorated(true);
+    toastDialog.setLayout(new BorderLayout());
+
+    JPanel toastPanel = new JPanel();
+    toastPanel.setBackground(isError ? DANGER_RED : SUCCESS_GREEN);
+    toastPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+    toastPanel.setLayout(new BorderLayout());
+
+    JLabel toastLabel = new JLabel(message);
+    toastLabel.setForeground(Color.WHITE);
+    toastLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    toastPanel.add(toastLabel, BorderLayout.CENTER);
+
+    toastDialog.add(toastPanel);
+    toastDialog.pack();
+
+    // Center toast relative to parent window
+    Frame owner = (Frame) SwingUtilities.getWindowAncestor(this);
+    if (owner != null) {
+        int x = owner.getX() + (owner.getWidth() - toastDialog.getWidth()) / 2;
+        int y = owner.getY() + owner.getHeight() - toastDialog.getHeight() - 50;
+        toastDialog.setLocation(x, y);
     }
+
+    toastDialog.setVisible(true);
+
+    // Auto-hide toast after 2 seconds
+    new Timer(2000, e -> {
+        toastDialog.dispose();
+    }).start();
+}    
 }

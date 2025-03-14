@@ -59,7 +59,7 @@ public class ReservationPanel extends JPanel {
         this.reservationTable = new JTable(tableModel);
 
         // Set table header appearance
-        reservationTable.getTableHeader().setBackground(new Color(51, 122, 183));
+        reservationTable.getTableHeader().setBackground(PRIMARY_BLUE);
         // reservationTable.getTableHeader().setForeground(Color.WHITE);
         reservationTable.getTableHeader().setFont(reservationTable.getTableHeader().getFont().deriveFont(Font.BOLD));
 
@@ -386,7 +386,7 @@ public class ReservationPanel extends JPanel {
             JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
             panel.setBackground(table.getBackground()); // Always use default background
 
-            JButton cancelBtn = createButton("Cancel");
+            JButton cancelBtn = createStyledButton("Cancel", DANGER_RED);
             cancelBtn.setBackground(new Color(220, 53, 69)); // Red for cancel
 
             // Set fixed size for button
