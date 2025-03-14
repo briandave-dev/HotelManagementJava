@@ -66,13 +66,13 @@ public class InvoicePdfGenerator {
         document.add(title);
         
         // Ajouter les informations de l'hôtel
-        Paragraph hotelInfo = new Paragraph("HOTEL LUXURY PALACE")
+        Paragraph hotelInfo = new Paragraph("NOM DE LHOTEL")
                 .setFont(boldFont)
                 .setFontSize(14)
                 .setTextAlignment(TextAlignment.CENTER);
         document.add(hotelInfo);
         
-        Paragraph hotelAddress = new Paragraph("123 Avenue des Champs-Élysées, Paris, France\nTél: +33 1 23 45 67 89\nEmail: contact@luxurypalace.com")
+        Paragraph hotelAddress = new Paragraph("ENSPD, Cameroun\nTél: +237 699 999 999\nEmail: briandave.dev@gmail.com\nfankamnga@gmail.com")
                 .setFont(normalFont)
                 .setFontSize(10)
                 .setTextAlignment(TextAlignment.CENTER)
@@ -162,20 +162,20 @@ public class InvoicePdfGenerator {
         costsTable.addHeaderCell(createHeaderCell("Montant", boldFont, 10));
         
         // Contenu
-        costsTable.addCell(createCell("Hébergement - " + days + " nuit(s) x " + String.format("%.2f", reservation.getRoom().getRatePerNight()) + " €", normalFont, 10, TextAlignment.LEFT));
-        costsTable.addCell(createCell(String.format("%.2f €", invoice.getSubtotal()), normalFont, 10, TextAlignment.RIGHT));
+        costsTable.addCell(createCell("Hébergement - " + days + " nuit(s) x " + String.format("%.2f", reservation.getRoom().getRatePerNight()) + " $", normalFont, 10, TextAlignment.LEFT));
+        costsTable.addCell(createCell(String.format("%.2f $", invoice.getSubtotal()), normalFont, 10, TextAlignment.RIGHT));
         
         costsTable.addCell(createCell("Sous-total", boldFont, 10, TextAlignment.LEFT));
-        costsTable.addCell(createCell(String.format("%.2f €", invoice.getSubtotal()), boldFont, 10, TextAlignment.RIGHT));
+        costsTable.addCell(createCell(String.format("%.2f $", invoice.getSubtotal()), boldFont, 10, TextAlignment.RIGHT));
         
         costsTable.addCell(createCell("TVA (" + String.format("%.1f", (invoice.getTax() / invoice.getSubtotal()) * 100) + "%)", normalFont, 10, TextAlignment.LEFT));
-        costsTable.addCell(createCell(String.format("%.2f €", invoice.getTax()), normalFont, 10, TextAlignment.RIGHT));
+        costsTable.addCell(createCell(String.format("%.2f $", invoice.getTax()), normalFont, 10, TextAlignment.RIGHT));
         
         Cell totalLabelCell = createCell("TOTAL", boldFont, 12, TextAlignment.LEFT);
         totalLabelCell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
         costsTable.addCell(totalLabelCell);
         
-        Cell totalValueCell = createCell(String.format("%.2f €", invoice.getTotal()), boldFont, 12, TextAlignment.RIGHT);
+        Cell totalValueCell = createCell(String.format("%.2f $", invoice.getTotal()), boldFont, 12, TextAlignment.RIGHT);
         totalValueCell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
         costsTable.addCell(totalValueCell);
         
