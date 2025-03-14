@@ -205,7 +205,7 @@ public class InvoicePanel extends JPanel {
             if (invoice != null) {
                 // TODO: Implement PDF generation
                 invoiceService.generatePdf(invoice);
-                JOptionPane.showMessageDialog(this, "PDF generation Ok", "Generate PDF", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "PDF generated successfully!", "Generate PDF", JOptionPane.INFORMATION_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(this, "Please select an invoice to generate PDF", "No Selection", JOptionPane.WARNING_MESSAGE);
