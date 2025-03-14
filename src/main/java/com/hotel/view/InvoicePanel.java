@@ -47,7 +47,7 @@ public class InvoicePanel extends JPanel {
         
         // Set table header appearance
         invoiceTable.getTableHeader().setBackground(new Color(51, 122, 183));
-        invoiceTable.getTableHeader().setForeground(Color.WHITE);
+        // invoiceTable.getTableHeader().setForeground(Color.WHITE);
         invoiceTable.getTableHeader().setFont(invoiceTable.getTableHeader().getFont().deriveFont(Font.BOLD));
         
         // Set row height to better accommodate buttons
@@ -235,7 +235,7 @@ public class InvoicePanel extends JPanel {
         button.setMargin(new Insets(1, 3, 1, 3));
         button.setFocusPainted(false);
         button.setBackground(new Color(51, 122, 183));
-        button.setForeground(Color.WHITE);
+        // button.setForeground(Color.WHITE);
         button.setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 6));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return button;

@@ -26,6 +26,8 @@ public class RoomService {
 
     }
 
+    
+
     public void addRoom(String number, RoomCategory category, double ratePerNight, String amenities) {
         if (findRoomByNumber(number).isPresent()) {
             throw new IllegalArgumentException("Room number already exists");

@@ -19,6 +19,11 @@ public class RoomPanel extends JPanel {
     private final JTextField rateField;
     private final JTextField amenitiesField;
     private String selectedRoomNumber;
+    
+    // Define consistent colors
+    private final Color PRIMARY_BLUE = new Color(51, 122, 183);
+    private final Color DANGER_RED = new Color(220, 53, 69);
+    private final Color SUCCESS_GREEN = new Color(40, 167, 69);
 
     public RoomPanel(RoomService roomService) {
         this.roomService = roomService;
@@ -31,7 +36,7 @@ public class RoomPanel extends JPanel {
         this.amenitiesField = new JTextField(20);
 
         // Create table model and table
-        String[] columnNames = {"Number", "Category", "Rate/Night", "Amenities", "Status", "Actions"};
+        String[] columnNames = { "Number", "Category", "Rate/Night", "Amenities", "Status", "Actions" };
         this.tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -40,21 +45,22 @@ public class RoomPanel extends JPanel {
 
             @Override
             public Class<?> getColumnClass(int columnIndex) {
-                if (columnIndex == 2) return Double.class;
+                if (columnIndex == 2)
+                    return Double.class;
                 return String.class;
             }
         };
         this.roomTable = new JTable(tableModel);
 
         // Set table header appearance
-        roomTable.getTableHeader().setBackground(new Color(51, 122, 183));
-        roomTable.getTableHeader().setForeground(Color.WHITE);
+        roomTable.getTableHeader().setBackground(PRIMARY_BLUE);
+        // roomTable.getTableHeader().setForeground(Color.WHITE);
         roomTable.getTableHeader().setFont(roomTable.getTableHeader().getFont().deriveFont(Font.BOLD));
 
         // Remove hover effect from rows
         roomTable.setSelectionBackground(roomTable.getBackground());
         roomTable.setSelectionForeground(roomTable.getForeground());
-        
+
         // Set row height to better accommodate buttons
         roomTable.setRowHeight(30);
 
@@ -63,7 +69,7 @@ public class RoomPanel extends JPanel {
         roomTable.getColumn("Actions").setCellEditor(new ButtonEditor(new JTextField()));
 
         // Set preferred column widths
-        roomTable.getColumnModel().getColumn(0).setPreferredWidth(50);  // Number
+        roomTable.getColumnModel().getColumn(0).setPreferredWidth(50); // Number
         roomTable.getColumnModel().getColumn(5).setPreferredWidth(180); // Actions
         roomTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && roomTable.getSelectedRow() != -1) {
@@ -80,7 +86,7 @@ public class RoomPanel extends JPanel {
 
         // Create and add form panel
         JPanel formPanel = createFormPanel();
-        
+
         // Create a wrapper panel to center the form - FIXED
         JPanel centeringPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         centeringPanel.add(formPanel);
@@ -101,27 +107,29 @@ public class RoomPanel extends JPanel {
         }
 
         @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+                int row, int column) {
             this.removeAll();
             setBackground(table.getBackground()); // Always use default background
-            
+
             String roomNumber = (String) tableModel.getValueAt(row, 0);
-            
-            JButton editBtn = createButton("Edit");
-            JButton copyBtn = createButton("Copy ID");
-            JButton deleteBtn = createButton("Delete");
-            deleteBtn.setBackground(new Color(220, 53, 69)); // Red color for delete button
-            
+
+            // JButton editBtn = createButton("Edit");
+            JButton editBtn = createStyledButton("Edit", new Color(51,122, 183));
+            JButton copyBtn = createStyledButton("Copy ID", PRIMARY_BLUE);
+            JButton deleteBtn = createStyledButton("Delete", DANGER_RED);
+            // deleteBtn.setBackground(new Color(220, 53, 69)); // Red color for delete button
+
             // Set fixed size for buttons
-            Dimension buttonSize = new Dimension(60, 25);
+            Dimension buttonSize = new Dimension(100, 25);
             editBtn.setPreferredSize(buttonSize);
             copyBtn.setPreferredSize(buttonSize);
             deleteBtn.setPreferredSize(buttonSize);
-            
+
             this.add(editBtn);
             this.add(copyBtn);
             this.add(deleteBtn);
-            
+
             return this;
         }
     }
@@ -138,42 +146,43 @@ public class RoomPanel extends JPanel {
         }
 
         @Override
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row,
+                int column) {
             panel.removeAll();
             panel.setBackground(table.getBackground()); // Always use default background
-            
+
             roomNumber = (String) tableModel.getValueAt(row, 0);
-            
-            JButton editBtn = createButton("Edit");
-            JButton copyBtn = createButton("Copy ID");
-            JButton deleteBtn = createButton("Delete");
-            deleteBtn.setBackground(new Color(220, 53, 69)); // Red color for delete button
-            
+
+            JButton editBtn = createStyledButton("Edit", PRIMARY_BLUE);
+            JButton copyBtn = createStyledButton("Copy ID", PRIMARY_BLUE);
+            JButton deleteBtn = createStyledButton("Delete", DANGER_RED);
+            // deleteBtn.setBackground(new Color(220, 53, 69)); // Red color for delete button
+
             // Set fixed size for buttons
-            Dimension buttonSize = new Dimension(60, 25);
+            Dimension buttonSize = new Dimension(100, 25);
             editBtn.setPreferredSize(buttonSize);
             copyBtn.setPreferredSize(buttonSize);
             deleteBtn.setPreferredSize(buttonSize);
-            
+
             editBtn.addActionListener(e -> {
                 fireEditingStopped();
                 showEditDialog(table.getSelectedRow());
             });
-            
+
             copyBtn.addActionListener(e -> {
                 fireEditingStopped();
                 copyRoomNumber(table.getSelectedRow());
             });
-            
+
             deleteBtn.addActionListener(e -> {
                 fireEditingStopped();
                 deleteRoom(table.getSelectedRow());
             });
-            
+
             panel.add(editBtn);
             panel.add(copyBtn);
             panel.add(deleteBtn);
-            
+
             return panel;
         }
 
@@ -187,18 +196,17 @@ public class RoomPanel extends JPanel {
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
         formPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
-            BorderFactory.createEmptyBorder(15, 15, 15, 15)
-        ));
+                BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
+                BorderFactory.createEmptyBorder(15, 15, 15, 15)));
         formPanel.setBackground(new Color(245, 245, 245));
-        
+
         // Add title
         JLabel titleLabel = new JLabel("Room Management", JLabel.CENTER);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
         formPanel.add(titleLabel);
-        
+
         // Create grid panel for form fields
         JPanel gridPanel = new JPanel(new GridBagLayout());
         gridPanel.setOpaque(false);
@@ -206,38 +214,38 @@ public class RoomPanel extends JPanel {
         gbc.insets = new Insets(8, 10, 8, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
-        
+
         // Style text fields
         roomNumberField.setPreferredSize(new Dimension(roomNumberField.getPreferredSize().width, 30));
         rateField.setPreferredSize(new Dimension(rateField.getPreferredSize().width, 30));
         amenitiesField.setPreferredSize(new Dimension(amenitiesField.getPreferredSize().width, 30));
-        
+
         // Style combo box
         categoryComboBox.setPreferredSize(new Dimension(categoryComboBox.getPreferredSize().width, 30));
-        
+
         // Add form fields with styled labels
         addFormField(gridPanel, "Room Number:", roomNumberField, gbc, 0);
         addFormField(gridPanel, "Category:", categoryComboBox, gbc, 1);
         addFormField(gridPanel, "Rate/Night ($):", rateField, gbc, 2);
         addFormField(gridPanel, "Amenities:", amenitiesField, gbc, 3);
-        
+
         formPanel.add(gridPanel);
         formPanel.add(Box.createVerticalStrut(15));
-        
+
         // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         buttonPanel.setOpaque(false);
-        
+
         JButton addButton = createStyledButton("Add Room", new Color(40, 167, 69));
         JButton clearButton = createStyledButton("Clear Form", new Color(108, 117, 125));
-        
+
         addButton.addActionListener(e -> addRoom());
         clearButton.addActionListener(e -> clearForm());
-        
+
         buttonPanel.add(addButton);
         buttonPanel.add(clearButton);
         formPanel.add(buttonPanel);
-        
+
         return formPanel;
     }
 
@@ -255,11 +263,10 @@ public class RoomPanel extends JPanel {
             }
 
             roomService.addRoom(
-                roomNumberField.getText().trim(),
-                (RoomCategory) categoryComboBox.getSelectedItem(),
-                rate,
-                amenitiesField.getText().trim()
-            );
+                    roomNumberField.getText().trim(),
+                    (RoomCategory) categoryComboBox.getSelectedItem(),
+                    rate,
+                    amenitiesField.getText().trim());
             clearForm();
             refreshTable();
         } catch (NumberFormatException e) {
@@ -283,11 +290,10 @@ public class RoomPanel extends JPanel {
             }
 
             roomService.updateRoom(
-                selectedRoomNumber,
-                (RoomCategory) categoryComboBox.getSelectedItem(),
-                rate,
-                amenitiesField.getText().trim()
-            );
+                    selectedRoomNumber,
+                    (RoomCategory) categoryComboBox.getSelectedItem(),
+                    rate,
+                    amenitiesField.getText().trim());
             clearForm();
             refreshTable();
         } catch (NumberFormatException e) {
@@ -323,19 +329,18 @@ public class RoomPanel extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.weightx = 0.3;
-        
+
         JLabel label = new JLabel(labelText);
         label.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         panel.add(label, gbc);
 
         gbc.gridx = 1;
         gbc.weightx = 0.7;
-        
+
         if (field instanceof JTextField) {
             ((JTextField) field).setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200)),
-                BorderFactory.createEmptyBorder(2, 5, 2, 5)
-            ));
+                    BorderFactory.createLineBorder(new Color(200, 200, 200)),
+                    BorderFactory.createEmptyBorder(2, 5, 2, 5)));
         }
         panel.add(field, gbc);
     }
@@ -381,11 +386,10 @@ public class RoomPanel extends JPanel {
                     }
 
                     roomService.updateRoom(
-                        roomNumber,
-                        (RoomCategory) categoryComboBox.getSelectedItem(),
-                        rate,
-                        amenitiesField.getText().trim()
-                    );
+                            roomNumber,
+                            (RoomCategory) categoryComboBox.getSelectedItem(),
+                            rate,
+                            amenitiesField.getText().trim());
                     editDialog.dispose();
                     refreshTable();
                 } catch (NumberFormatException ex) {
@@ -413,17 +417,16 @@ public class RoomPanel extends JPanel {
         String roomNumber = (String) tableModel.getValueAt(row, 0);
         StringSelection selection = new StringSelection(roomNumber);
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
-        JOptionPane.showMessageDialog(this, "Room number copied to clipboard!", "Copy Success", JOptionPane.INFORMATION_MESSAGE);
+        showToast("Room number copied to clipboard!", false);
     }
 
     private void deleteRoom(int row) {
         String roomNumber = (String) tableModel.getValueAt(row, 0);
         int confirm = JOptionPane.showConfirmDialog(
-            this,
-            "Are you sure you want to delete this room?",
-            "Confirm Delete",
-            JOptionPane.YES_NO_OPTION
-        );
+                this,
+                "Are you sure you want to delete this room?",
+                "Confirm Delete",
+                JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             roomService.deleteRoom(roomNumber);
             refreshTable();
@@ -442,17 +445,17 @@ public class RoomPanel extends JPanel {
         return button;
     }
 
-    private JButton createButton(String text) {
-        JButton button = new JButton(text);
-        button.setFont(button.getFont().deriveFont(11f));
-        button.setMargin(new Insets(1, 3, 1, 3));
-        button.setFocusPainted(false);
-        button.setBackground(new Color(51, 122, 183));
-        button.setForeground(Color.WHITE);
-        button.setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 6));
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        return button;
-    }
+    // private JButton createButton(String text) {
+    //     JButton button = new JButton(text);
+    //     button.setFont(button.getFont().deriveFont(11f));
+    //     button.setMargin(new Insets(1, 3, 1, 3));
+    //     button.setFocusPainted(false);
+    //     button.setBackground(PRIMARY_BLUE);
+    //     // button.setForeground(Color.WHITE);
+    //     button.setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 6));
+    //     button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    //     return button;
+    // }
 
     private void clearForm() {
         roomNumberField.setText("");
@@ -468,14 +471,49 @@ public class RoomPanel extends JPanel {
         List<Room> rooms = roomService.getAllRooms();
         for (Room room : rooms) {
             Object[] row = {
-                room.getNumber(),
-                room.getCategory(),
-                room.getRatePerNight(),
-                room.getAmenities(),
-                room.isOccupied() ? "Occupied" : "Available",
-                "" // Empty string for actions column (will be rendered by ButtonRenderer)
+                    room.getNumber(),
+                    room.getCategory(),
+                    room.getRatePerNight(),
+                    room.getAmenities(),
+                    room.isOccupied() ? "Occupied" : "Available",
+                    "" // Empty string for actions column (will be rendered by ButtonRenderer)
             };
             tableModel.addRow(row);
         }
+    }
+
+    // Add a toast notification method
+    private void showToast(String message, Boolean isError) {
+        JDialog toastDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this));
+        toastDialog.setUndecorated(true);
+        toastDialog.setLayout(new BorderLayout());
+
+        JPanel toastPanel = new JPanel();
+        toastPanel.setBackground(isError ? DANGER_RED : SUCCESS_GREEN);
+        toastPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        toastPanel.setLayout(new BorderLayout());
+
+        JLabel toastLabel = new JLabel(message);
+        toastLabel.setForeground(Color.WHITE);
+        toastLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        toastPanel.add(toastLabel, BorderLayout.CENTER);
+
+        toastDialog.add(toastPanel);
+        toastDialog.pack();
+
+        // Center toast relative to parent window
+        Frame owner = (Frame) SwingUtilities.getWindowAncestor(this);
+        if (owner != null) {
+            int x = owner.getX() + (owner.getWidth() - toastDialog.getWidth()) / 2;
+            int y = owner.getY() + owner.getHeight() - toastDialog.getHeight() - 50;
+            toastDialog.setLocation(x, y);
+        }
+
+        toastDialog.setVisible(true);
+
+        // Auto-hide toast after 2 seconds
+        new Timer(2000, e -> {
+            toastDialog.dispose();
+        }).start();
     }
 }
