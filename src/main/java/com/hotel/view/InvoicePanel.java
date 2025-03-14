@@ -20,7 +20,15 @@ public class InvoicePanel extends JPanel {
     public InvoicePanel(InvoiceService invoiceService, ReservationService reservationService) {
         this.invoiceService = invoiceService;
         this.reservationService = reservationService;
-        setLayout(new BorderLayout());
+        this.setLayout(new BorderLayout(10, 10));
+        this.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        // Add title
+        JLabel titleLabel = new JLabel("Invoice Management", JLabel.CENTER);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+        add(titleLabel, BorderLayout.NORTH);
+
         initializeComponents();
     }
 
@@ -141,12 +149,25 @@ public class InvoicePanel extends JPanel {
         editDialog.setVisible(true);
     }
 
-    private void addFormField(JPanel panel, String label, JComponent field, GridBagConstraints gbc) {
+    private void addFormField(JPanel panel, String labelText, JComponent field, GridBagConstraints gbc) {
         gbc.gridx = 0;
-        panel.add(new JLabel(label), gbc);
-        gbc.gridx = 1;
-        panel.add(field, gbc);
         gbc.gridy++;
+        gbc.weightx = 0.3;
+        
+        JLabel label = new JLabel(labelText);
+        label.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        panel.add(label, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        
+        if (field instanceof JTextField) {
+            ((JTextField) field).setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(200, 200, 200)),
+                BorderFactory.createEmptyBorder(2, 5, 2, 5)
+            ));
+        }
+        panel.add(field, gbc);
     }
 
     private void copyInvoiceId(int row) {
@@ -210,12 +231,13 @@ public class InvoicePanel extends JPanel {
 
     private JButton createButton(String text) {
         JButton button = new JButton(text);
-        button.setFont(button.getFont().deriveFont(11f));
+        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
         button.setMargin(new Insets(1, 3, 1, 3));
         button.setFocusPainted(false);
         button.setBackground(new Color(51, 122, 183));
         button.setForeground(Color.WHITE);
         button.setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 6));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return button;
     }
 

@@ -48,18 +48,22 @@ public class ClientPanel extends JPanel {
         clientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         clientTable.getTableHeader().setReorderingAllowed(false);
 
-        // Set table header appearance
+        // Set table header appearance - make it permanently colored
         clientTable.getTableHeader().setBackground(new Color(51, 122, 183));
         clientTable.getTableHeader().setForeground(Color.WHITE);
         clientTable.getTableHeader().setFont(clientTable.getTableHeader().getFont().deriveFont(Font.BOLD));
-        
+
+        // Remove hover effect from rows
+        clientTable.setSelectionBackground(clientTable.getBackground());
+        clientTable.setSelectionForeground(clientTable.getForeground());
+
         // Set row height to better accommodate buttons
         clientTable.setRowHeight(30);
 
         // Configure the Actions column with proper button handling
         clientTable.getColumn("Actions").setCellRenderer((table, value, isSelected, hasFocus, row, column) -> {
             JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
-            panel.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
+            panel.setBackground(table.getBackground()); // Always use default background
             
             if (value instanceof JPanel) {
                 return (JPanel) value;
@@ -171,69 +175,41 @@ public class ClientPanel extends JPanel {
         button.setBackground(new Color(51, 122, 183));
         button.setForeground(Color.WHITE);
         button.setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 6));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setOpaque(true); // Ensure background color is shown
         return button;
     }
 
     private void setupLayout() {
         setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        // Create form panel
+        // Create form panel with rounded borders
         JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
+            BorderFactory.createEmptyBorder(15, 15, 15, 15)
+        ));
+        formPanel.setBackground(new Color(245, 245, 245));
+        
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.anchor = GridBagConstraints.WEST;
 
-        // Add form fields
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 0.0;
-        formPanel.add(new JLabel("First Name:"), gbc);
+        // Add form fields with improved styling
+        addFormField(formPanel, "First Name:", firstNameField, gbc, 0);
+        addFormField(formPanel, "Last Name:", lastNameField, gbc, 1);
+        addFormField(formPanel, "Address:", addressField, gbc, 2);
+        addFormField(formPanel, "Phone:", phoneField, gbc, 3);
+        addFormField(formPanel, "Email:", emailField, gbc, 4);
 
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        formPanel.add(firstNameField, gbc);
-
-        gbc.gridy++;
-        gbc.gridx = 0;
-        gbc.weightx = 0.0;
-        formPanel.add(new JLabel("Last Name:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        formPanel.add(lastNameField, gbc);
-
-        gbc.gridy++;
-        gbc.gridx = 0;
-        gbc.weightx = 0.0;
-        formPanel.add(new JLabel("Address:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        formPanel.add(addressField, gbc);
-
-        gbc.gridy++;
-        gbc.gridx = 0;
-        gbc.weightx = 0.0;
-        formPanel.add(new JLabel("Phone:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        formPanel.add(phoneField, gbc);
-
-        gbc.gridy++;
-        gbc.gridx = 0;
-        gbc.weightx = 0.0;
-        formPanel.add(new JLabel("Email:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
-        formPanel.add(emailField, gbc);
-
-        // Add buttons
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton addButton = new JButton("Add Client");
-        JButton clearButton = new JButton("Clear Form");
+        // Add buttons with improved styling
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        buttonPanel.setOpaque(false);
+        
+        JButton addButton = createStyledButton("Add Client", new Color(40, 167, 69));
+        JButton clearButton = createStyledButton("Clear Form", new Color(108, 117, 125));
 
         addButton.addActionListener(e -> addClient());
         clearButton.addActionListener(e -> clearForm());
@@ -241,20 +217,41 @@ public class ClientPanel extends JPanel {
         buttonPanel.add(addButton);
         buttonPanel.add(clearButton);
 
-        gbc.gridy++;
+        gbc.gridy = 5;
         gbc.gridx = 0;
         gbc.gridwidth = 2;
-        gbc.weightx = 1.0;
-        gbc.anchor = GridBagConstraints.PAGE_END;
+        gbc.anchor = GridBagConstraints.CENTER;
         formPanel.add(buttonPanel, gbc);
 
         // Create a wrapper panel to center the form
-        JPanel wrapperPanel = new JPanel(new GridBagLayout());
-        wrapperPanel.add(formPanel, new GridBagConstraints());
+        JPanel wrapperPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        wrapperPanel.add(formPanel);
+        wrapperPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+
+        // Add title
+        JLabel titleLabel = new JLabel("Client Management", JLabel.CENTER);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.add(titleLabel, BorderLayout.CENTER);
+
+        // Create a scroll pane with styled table
+        JScrollPane scrollPane = new JScrollPane(clientTable);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        
+        // Create a panel for the table section
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
+        
+        // Create a main content panel with form at top and table below
+        JPanel contentPanel = new JPanel(new BorderLayout(0, 20));
+        contentPanel.add(wrapperPanel, BorderLayout.NORTH);
+        contentPanel.add(tablePanel, BorderLayout.CENTER);
 
         // Add components to panel
-        add(wrapperPanel, BorderLayout.NORTH);
-        add(new JScrollPane(clientTable), BorderLayout.CENTER);
+        add(headerPanel, BorderLayout.NORTH);
+        add(contentPanel, BorderLayout.CENTER);
     }
 
     private void showEditDialog(int row) {
@@ -384,12 +381,37 @@ public class ClientPanel extends JPanel {
         }
     }
 
-    private void addFormField(JPanel panel, String label, JComponent field, GridBagConstraints gbc) {
+    private void addFormField(JPanel panel, String labelText, JTextField field, GridBagConstraints gbc, int row) {
         gbc.gridx = 0;
-        panel.add(new JLabel(label), gbc);
+        gbc.gridy = row;
+        gbc.weightx = 0.3;
+        
+        JLabel label = new JLabel(labelText);
+        label.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        panel.add(label, gbc);
+
         gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        
+        field.setPreferredSize(new Dimension(field.getPreferredSize().width, 30));
+        field.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(2, 5, 2, 5)
+        ));
         panel.add(field, gbc);
-        gbc.gridy++;
+    }
+
+    private JButton createStyledButton(String text, Color bgColor) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        button.setForeground(Color.WHITE);
+        button.setBackground(bgColor);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setPreferredSize(new Dimension(120, 35));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setOpaque(true); // Ensure background color is shown
+        return button;
     }
 
     private void copyClientId(int row) {

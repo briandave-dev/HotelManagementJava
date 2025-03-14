@@ -33,6 +33,13 @@ public class ReservationPanel extends JPanel {
         this.reservationService = reservationService;
         this.invoiceService = invoiceService;
         this.setLayout(new BorderLayout(10, 10));
+        this.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        // Add title
+        JLabel titleLabel = new JLabel("Reservation Management", JLabel.CENTER);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 15, 0));
+        add(titleLabel, BorderLayout.NORTH);
 
         // Initialize table model
         String[] columnNames = {"ID", "Client", "Room", "Check-In", "Check-Out", "Total Price", "Status", "Actions"};
@@ -51,6 +58,10 @@ public class ReservationPanel extends JPanel {
         reservationTable.getTableHeader().setBackground(new Color(51, 122, 183));
         reservationTable.getTableHeader().setForeground(Color.WHITE);
         reservationTable.getTableHeader().setFont(reservationTable.getTableHeader().getFont().deriveFont(Font.BOLD));
+
+        // Remove hover effect from rows
+        reservationTable.setSelectionBackground(reservationTable.getBackground());
+        reservationTable.setSelectionForeground(reservationTable.getForeground());
         
         // Set row height and selection mode
         reservationTable.setRowHeight(35);
@@ -311,6 +322,7 @@ public class ReservationPanel extends JPanel {
 
     private JButton createButton(String text) {
         JButton button = new JButton(text);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
         button.setForeground(Color.WHITE);
         if (text.equals("Cancel")) {
             button.setBackground(new Color(220, 53, 69)); // Red color for cancel button
@@ -320,6 +332,7 @@ public class ReservationPanel extends JPanel {
         button.setFocusPainted(false);
         button.setBorderPainted(false);
         button.setOpaque(true);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return button;
     }
 
@@ -329,17 +342,14 @@ public class ReservationPanel extends JPanel {
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
             JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
-            panel.setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
+            panel.setBackground(table.getBackground()); // Always use default background
             
             JButton cancelBtn = createButton("Cancel");
+            cancelBtn.setBackground(new Color(220, 53, 69)); // Red for cancel
             
             // Set fixed size for button
             Dimension buttonSize = new Dimension(80, 25);
             cancelBtn.setPreferredSize(buttonSize);
-            
-            // Disable the button if the reservation is already cancelled
-            String status = (String)tableModel.getValueAt(row, 6);
-            cancelBtn.setEnabled(!status.equals("Cancelled"));
             
             panel.add(cancelBtn);
             return panel;

@@ -33,8 +33,18 @@ public class MainFrame extends JFrame {
     private void initializeFrame() {
         setTitle("Hotel Management System");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(800, 600);
+        setSize(900, 700);
         setLocationRelativeTo(null);
+        
+        // Set a modern look and feel
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        // Set a custom icon if available
+        // setIconImage(new ImageIcon("path/to/icon.png").getImage());
     }
 
     private void createMenuBar() {
@@ -87,9 +97,40 @@ public class MainFrame extends JFrame {
 
     private JPanel createWelcomePanel() {
         JPanel welcomePanel = new JPanel(new BorderLayout());
+        
+        // Create a gradient panel for background
+        JPanel gradientPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                int w = getWidth(), h = getHeight();
+                Color color1 = new Color(66, 139, 202);
+                Color color2 = new Color(51, 122, 183);
+                GradientPaint gp = new GradientPaint(0, 0, color1, w, h, color2);
+                g2d.setPaint(gp);
+                g2d.fillRect(0, 0, w, h);
+            }
+        };
+        
         JLabel welcomeLabel = new JLabel("Welcome to Hotel Management System", SwingConstants.CENTER);
-        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        welcomePanel.add(welcomeLabel, BorderLayout.CENTER);
+        welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        welcomeLabel.setForeground(Color.WHITE);
+        
+        JLabel subLabel = new JLabel("Select an option from the menu above to get started", SwingConstants.CENTER);
+        subLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        subLabel.setForeground(Color.WHITE);
+        
+        JPanel textPanel = new JPanel(new GridLayout(2, 1, 0, 10));
+        textPanel.setOpaque(false);
+        textPanel.add(welcomeLabel);
+        textPanel.add(subLabel);
+        
+        gradientPanel.setLayout(new GridBagLayout());
+        gradientPanel.add(textPanel);
+        
+        welcomePanel.add(gradientPanel, BorderLayout.CENTER);
         return welcomePanel;
     }
 
