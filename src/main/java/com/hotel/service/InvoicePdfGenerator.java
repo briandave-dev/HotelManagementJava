@@ -162,20 +162,20 @@ public class InvoicePdfGenerator {
         costsTable.addHeaderCell(createHeaderCell("Montant", boldFont, 10));
         
         // Contenu
-        costsTable.addCell(createCell("Hébergement - " + days + " nuit(s) x " + String.format("%.2f", reservation.getRoom().getRatePerNight()) + " $", normalFont, 10, TextAlignment.LEFT));
-        costsTable.addCell(createCell(String.format("%.2f $", invoice.getSubtotal()), normalFont, 10, TextAlignment.RIGHT));
+        costsTable.addCell(createCell("Hébergement - " + days + " nuit(s) x " + String.format("%.2f", reservation.getRoom().getRatePerNight()) + " FCFA", normalFont, 10, TextAlignment.LEFT));
+        costsTable.addCell(createCell(String.format("%.2f FCFA", invoice.getSubtotal()), normalFont, 10, TextAlignment.RIGHT));
         
         costsTable.addCell(createCell("Sous-total", boldFont, 10, TextAlignment.LEFT));
-        costsTable.addCell(createCell(String.format("%.2f $", invoice.getSubtotal()), boldFont, 10, TextAlignment.RIGHT));
+        costsTable.addCell(createCell(String.format("%.2f FCFA", invoice.getSubtotal()), boldFont, 10, TextAlignment.RIGHT));
         
         costsTable.addCell(createCell("TVA (" + String.format("%.1f", (invoice.getTax() / invoice.getSubtotal()) * 100) + "%)", normalFont, 10, TextAlignment.LEFT));
-        costsTable.addCell(createCell(String.format("%.2f $", invoice.getTax()), normalFont, 10, TextAlignment.RIGHT));
+        costsTable.addCell(createCell(String.format("%.2f FCFA", invoice.getTax()), normalFont, 10, TextAlignment.RIGHT));
         
         Cell totalLabelCell = createCell("TOTAL", boldFont, 12, TextAlignment.LEFT);
         totalLabelCell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
         costsTable.addCell(totalLabelCell);
         
-        Cell totalValueCell = createCell(String.format("%.2f $", invoice.getTotal()), boldFont, 12, TextAlignment.RIGHT);
+        Cell totalValueCell = createCell(String.format("%.2f FCFA", invoice.getTotal()), boldFont, 12, TextAlignment.RIGHT);
         totalValueCell.setBackgroundColor(ColorConstants.LIGHT_GRAY);
         costsTable.addCell(totalValueCell);
         
