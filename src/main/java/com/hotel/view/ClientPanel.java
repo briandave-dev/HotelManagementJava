@@ -22,6 +22,11 @@ public class ClientPanel extends JPanel {
     private final JTextField emailField;
     private String selectedClientId;
     private JDialog editDialog;
+    
+    // Define consistent colors
+    private final Color PRIMARY_BLUE = new Color(51, 122, 183);
+    private final Color DANGER_RED = new Color(220, 53, 69);
+    private final Color SUCCESS_GREEN = new Color(40, 167, 69);
 
     public ClientPanel(ClientService clientService) {
         this.clientService = clientService;
@@ -48,15 +53,18 @@ public class ClientPanel extends JPanel {
         clientTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         clientTable.getTableHeader().setReorderingAllowed(false);
 
-        // Set table header appearance - make it permanently colored
-        clientTable.getTableHeader().setBackground(new Color(51, 122, 183));
-        clientTable.getTableHeader().setForeground(Color.WHITE);
+        // Fix header styling - ensure it's blue with white text
+        clientTable.getTableHeader().setBackground(PRIMARY_BLUE);
+        // clientTable.getTableHeader().setForeground(Color.WHITE);
         clientTable.getTableHeader().setFont(clientTable.getTableHeader().getFont().deriveFont(Font.BOLD));
-
-        // Remove hover effect from rows
+        
+        // Make sure the background color is retained by making it opaque
+        clientTable.getTableHeader().setOpaque(true);
+        
+        // Disable the default blue selection highlight
         clientTable.setSelectionBackground(clientTable.getBackground());
         clientTable.setSelectionForeground(clientTable.getForeground());
-
+        
         // Set row height to better accommodate buttons
         clientTable.setRowHeight(30);
 
@@ -73,7 +81,7 @@ public class ClientPanel extends JPanel {
             JButton editBtn = createButton("Edit");
             JButton copyBtn = createButton("Copy ID");
             JButton deleteBtn = createButton("Delete");
-            deleteBtn.setBackground(new Color(220, 53, 69)); // Red color for delete button
+            deleteBtn.setBackground(DANGER_RED); // Red color for delete button
             
             // Set fixed size for buttons
             Dimension buttonSize = new Dimension(60, 25);
@@ -122,13 +130,13 @@ public class ClientPanel extends JPanel {
             
             // Clear panel and recreate buttons
             panel.removeAll();
-            panel.setBackground(table.getSelectionBackground());
+            panel.setBackground(table.getBackground()); // Keep default background instead of selection color
             
             // Create buttons with the same styling as in your renderer
             JButton editBtn = createButton("Edit");
             JButton copyBtn = createButton("Copy ID");
             JButton deleteBtn = createButton("Delete");
-            deleteBtn.setBackground(new Color(220, 53, 69)); // Red color for delete button
+            deleteBtn.setBackground(DANGER_RED); // Red color for delete button
             
             // Set fixed size for buttons
             Dimension buttonSize = new Dimension(60, 25);
@@ -172,11 +180,22 @@ public class ClientPanel extends JPanel {
         button.setFont(button.getFont().deriveFont(11f));
         button.setMargin(new Insets(1, 3, 1, 3));
         button.setFocusPainted(false);
-        button.setBackground(new Color(51, 122, 183));
-        button.setForeground(Color.WHITE);
+        button.setBackground(PRIMARY_BLUE);
+        // button.setForeground(Color.WHITE);
         button.setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 6));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setOpaque(true); // Ensure background color is shown
+        button.setOpaque(true); // This is critical to ensure the background color is shown
+        button.setContentAreaFilled(true); // Make sure content area is filled
+        
+        // Remove any rollover/hover effects
+        button.getModel().addChangeListener(e -> {
+            if (button.getModel().isRollover()) {
+                button.setBackground(button.getBackground().darker());
+            } else {
+                button.setBackground(button.getBackground() == DANGER_RED ? DANGER_RED : PRIMARY_BLUE);
+            }
+        });
+        
         return button;
     }
 
@@ -208,7 +227,7 @@ public class ClientPanel extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         buttonPanel.setOpaque(false);
         
-        JButton addButton = createStyledButton("Add Client", new Color(40, 167, 69));
+        JButton addButton = createStyledButton("Add Client", SUCCESS_GREEN);
         JButton clearButton = createStyledButton("Clear Form", new Color(108, 117, 125));
 
         addButton.addActionListener(e -> addClient());
@@ -322,8 +341,8 @@ public class ClientPanel extends JPanel {
 
             // Add buttons
             JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-            JButton saveButton = new JButton("Save");
-            JButton cancelButton = new JButton("Cancel");
+            JButton saveButton = createStyledButton("Save", SUCCESS_GREEN);
+            JButton cancelButton = createStyledButton("Cancel", new Color(108, 117, 125));
 
             saveButton.addActionListener(e -> {
                 // Update client
@@ -337,6 +356,7 @@ public class ClientPanel extends JPanel {
                     client.getAddress(), client.getPhoneNumber(), client.getEmail());
                 editDialog.dispose();
                 refreshTable();
+                showToast("Client updated successfully!");
             });
 
             cancelButton.addActionListener(e -> editDialog.dispose());
@@ -376,6 +396,7 @@ public class ClientPanel extends JPanel {
                 newClient.getAddress(), newClient.getPhoneNumber(), newClient.getEmail());
             clearForm();
             refreshTable();
+            showToast("Client added successfully!");
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error adding client: " + e.getMessage());
         }
@@ -411,6 +432,17 @@ public class ClientPanel extends JPanel {
         button.setPreferredSize(new Dimension(120, 35));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setOpaque(true); // Ensure background color is shown
+        button.setContentAreaFilled(true); // Make sure content area is filled
+        
+        // Remove hover effect by maintaining color
+        button.getModel().addChangeListener(e -> {
+            if (button.getModel().isRollover()) {
+                button.setBackground(bgColor.darker());
+            } else {
+                button.setBackground(bgColor);
+            }
+        });
+        
         return button;
     }
 
@@ -418,7 +450,7 @@ public class ClientPanel extends JPanel {
         String clientId = (String) tableModel.getValueAt(row, 0);
         StringSelection selection = new StringSelection(clientId);
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
-        JOptionPane.showMessageDialog(this, "Client ID copied to clipboard!", "Copy Success", JOptionPane.INFORMATION_MESSAGE);
+        showToast("Client ID copied to clipboard!");
     }
 
     private void deleteClient(int row) {
@@ -432,33 +464,14 @@ public class ClientPanel extends JPanel {
         if (confirm == JOptionPane.YES_OPTION) {
             clientService.deleteClient(clientId);
             refreshTable();
+            showToast("Client deleted successfully!");
         }
     }
 
     private void refreshTable() {
         tableModel.setRowCount(0);
         clientService.getAllClients().forEach(client -> {
-            JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
-            
-            // Create buttons with fixed size
-            Dimension buttonSize = new Dimension(60, 25);
-            JButton editBtn = createButton("Edit");
-            JButton copyBtn = createButton("Copy ID");
-            JButton deleteBtn = createButton("Delete");
-            deleteBtn.setBackground(new Color(220, 53, 69));
-            
-            editBtn.setPreferredSize(buttonSize);
-            copyBtn.setPreferredSize(buttonSize);
-            deleteBtn.setPreferredSize(buttonSize);
-            
-            editBtn.addActionListener(e -> showEditDialog(tableModel.getRowCount()));
-            copyBtn.addActionListener(e -> copyClientId(tableModel.getRowCount()));
-            deleteBtn.addActionListener(e -> deleteClient(tableModel.getRowCount()));
-            
-            actionPanel.add(editBtn);
-            actionPanel.add(copyBtn);
-            actionPanel.add(deleteBtn);
-            
+            // Create empty placeholder for actions column - the actual buttons will be created by the renderer
             Object[] row = {
                 client.getId(),
                 client.getFirstName(),
@@ -466,7 +479,7 @@ public class ClientPanel extends JPanel {
                 client.getAddress(),
                 client.getPhoneNumber(),
                 client.getEmail(),
-                actionPanel
+                null // This will be replaced by our custom renderer
             };
             tableModel.addRow(row);
         });
@@ -480,5 +493,40 @@ public class ClientPanel extends JPanel {
         emailField.setText("");
         selectedClientId = null;
         clientTable.clearSelection();
+    }
+    
+    // Add a toast notification method
+    private void showToast(String message) {
+        JDialog toastDialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this));
+        toastDialog.setUndecorated(true);
+        toastDialog.setLayout(new BorderLayout());
+        
+        JPanel toastPanel = new JPanel();
+        toastPanel.setBackground(new Color(51, 51, 51, 230));
+        toastPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        toastPanel.setLayout(new BorderLayout());
+        
+        JLabel toastLabel = new JLabel(message);
+        toastLabel.setForeground(Color.WHITE);
+        toastLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        toastPanel.add(toastLabel, BorderLayout.CENTER);
+        
+        toastDialog.add(toastPanel);
+        toastDialog.pack();
+        
+        // Center toast relative to parent window
+        Frame owner = (Frame) SwingUtilities.getWindowAncestor(this);
+        if (owner != null) {
+            int x = owner.getX() + (owner.getWidth() - toastDialog.getWidth()) / 2;
+            int y = owner.getY() + owner.getHeight() - toastDialog.getHeight() - 50;
+            toastDialog.setLocation(x, y);
+        }
+        
+        toastDialog.setVisible(true);
+        
+        // Auto-hide toast after 2 seconds
+        new Timer(2000, e -> {
+            toastDialog.dispose();
+        }).start();
     }
 }
