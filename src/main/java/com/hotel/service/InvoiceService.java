@@ -6,6 +6,9 @@ import com.hotel.model.Invoice;
 import com.hotel.model.Reservation;
 import com.hotel.model.Room;
 
+import java.awt.Desktop;
+import java.io.File;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -16,6 +19,8 @@ import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import javax.swing.JOptionPane;
 
 public class InvoiceService {
     private final List<Invoice> invoices;
@@ -40,7 +45,6 @@ public class InvoiceService {
             pstmt.setDouble(4, invoice.getSubtotal());
             pstmt.setDouble(5, invoice.getTax());
             pstmt.setDouble(6, invoice.getTotal());
-            pstmt.setBoolean(7, reservation.isCancelled());
             
             pstmt.executeUpdate();
 
@@ -143,7 +147,21 @@ public class InvoiceService {
             
         }
     }
-
+    public void generatePdf(Invoice invoice){
+        try {
+                    InvoicePdfGenerator generator = new InvoicePdfGenerator();
+                    String pdfPath = generator.generateInvoicePdf(invoice);
+                    
+                    System.out.println("PDF généré avec succès : " + pdfPath);
+                    
+                    // Ouvrir le PDF avec l'application par défau   t
+                    if (Desktop.isDesktopSupported()) {
+                        Desktop.getDesktop().open(new File(pdfPath));
+                    }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+    }
     private void loadInvoicesFromDatabase(ReservationService reservationS) {
         String sql = "SELECT * FROM invoice";
         
@@ -205,10 +223,11 @@ public class InvoiceService {
     }
 
     public static void craeteInvoiceTableIfNotExists() {
-
+        // String sql3 = "drop table if exists invoice";
+        // String sql4 = "drop table if exists additionalService";
         String sql1 = "CREATE TABLE IF NOT EXISTS invoice (" +
-                     "id Varchar(20) PRIMARY KEY," +
-                     "reservationId VARCHAR(20) NOT NULL," +
+                     "id Varchar(50) PRIMARY KEY," +
+                     "reservationId VARCHAR(50) NOT NULL," +
                      "generationDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
                      "subtotal DOUBLE NOT NULL," +
                      "tax DOUBLE NOT NULL," +
@@ -219,14 +238,15 @@ public class InvoiceService {
 
         String sql = "CREATE TABLE IF NOT EXISTS additionalService (" +
                       "id INT AUTO_INCREMENT PRIMARY KEY," +
-                      "invoiceId VARCHAR(36) NOT NULL," +
+                      "invoiceId VARCHAR(50) NOT NULL," +
                       "description VARCHAR(255) NOT NULL," +
                       "price DOUBLE NOT NULL," +
                       "FOREIGN KEY (invoiceId) REFERENCES invoice(id) ON DELETE CASCADE);";
                       
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement()) {
-            
+                // stmt.executeUpdate(sql4);
+                // stmt.executeUpdate(sql3);
             stmt.executeUpdate(sql1);
             System.out.println("Table 'invoice' prête !");
             stmt.executeUpdate(sql);

@@ -37,11 +37,11 @@ public class MainFrame extends JFrame {
         setLocationRelativeTo(null);
         
         // Set a modern look and feel
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // try {
+        //     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        // } catch (Exception e) {
+        //     e.printStackTrace();
+        // }
         
         // Set a custom icon if available
         // setIconImage(new ImageIcon("path/to/icon.png").getImage());
